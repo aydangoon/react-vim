@@ -6,6 +6,8 @@ import {
     next_end_of_WORD,
     prev_word,
     prev_WORD,
+    prev_end_of_word,
+    prev_end_of_WORD,
 } from '../src/movement'
 
 describe('next_blank', () => {
@@ -50,6 +52,9 @@ describe('next_word', () => {
         expect(next_word('abc\n\ndef', 0)).toBe(4)
         expect(next_word('.%\n\ndef', 1)).toBe(3)
     })
+    test('blank then word', () => {
+        expect(next_word(' ab', 0)).toBe(1)
+    })
 })
 
 describe('next_WORD', () => {
@@ -66,6 +71,9 @@ describe('next_WORD', () => {
     })
     test('consecutive newlines', () => {
         expect(next_WORD('..#\n\nd&f', 0)).toBe(4)
+    })
+    test('blank then WORD', () => {
+        expect(next_WORD('  .b', 0)).toBe(2)
     })
 })
 
@@ -142,5 +150,30 @@ describe('prev_WORD', () => {
         expect(prev_WORD('.\n\n?', 3)).toBe(2)
         expect(prev_WORD('?\n\n#', 1)).toBe(0)
         expect(prev_WORD('@\n\n2', 2)).toBe(0)
+    })
+})
+
+describe('prev_end_of_word', () => {
+    test('one word', () => {
+        expect(prev_end_of_word('abc', 2)).toBe(-1)
+    })
+    test('two words', () => {
+        expect(prev_end_of_word('abc  def', 3)).toBe(2)
+        expect(prev_end_of_word('abc def', 4)).toBe(2)
+        expect(prev_end_of_word('abc def', 5)).toBe(2)
+    })
+    test('consecutive newlines', () => {
+        expect(prev_end_of_word('a\n\nb', 3)).toBe(0)
+    })
+})
+
+describe('prev_end_of_WORD', () => {
+    test('one WORD', () => {
+        expect(prev_end_of_WORD('a.?', 2)).toBe(-1)
+    })
+    test('two WORDs', () => {
+        expect(prev_end_of_WORD('a.@ \t12#', 3)).toBe(2)
+        expect(prev_end_of_WORD('... 1.2', 4)).toBe(2)
+        expect(prev_end_of_WORD('@3@ f..', 5)).toBe(2)
     })
 })
