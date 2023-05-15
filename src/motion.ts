@@ -120,13 +120,37 @@ export const j = (text: string, pos: number, desired_col?: number): number => {
     return Math.min(next_line_start + col, next_line_end)
 }
 
-export type MotionType = 'w' | 'W' | 'e' | 'E' | 'b' | 'B' | 'ge' | 'gE' | 'h' | 'l' | 'k' | 'j'
+export const zero = (text: string, pos: number) => text.lastIndexOf('\n', pos - 1) + 1
+
+export const caret = (text: string, pos: number) => {
+    const line_start = zero(text, pos)
+    let line_end = text.indexOf('\n', pos) - 1 // exclude newline
+    line_end = line_end < 0 ? text.length - 1 : line_end
+    if (line_end < line_start) return pos
+    const word = VIM_word.exec(text.substring(line_start, line_end + 1))
+    return word ? line_start + word.index : line_end
+}
+
+export type MotionType =
+    | 'w'
+    | 'W'
+    | 'e'
+    | 'E'
+    | 'b'
+    | 'B'
+    | 'ge'
+    | 'gE'
+    | 'h'
+    | 'l'
+    | 'k'
+    | 'j'
+    | '0'
 export interface Motion {
     count?: number
     type: MotionType
 }
 
-export const motion = (m: Motion, text: string, pos: number, desired_col?: number): number => {
+export const execute = (m: Motion, text: string, pos: number, desired_col?: number): number => {
     let new_pos = pos
     const count = m.count || 1
     const type = m.type
@@ -144,6 +168,7 @@ export const motion = (m: Motion, text: string, pos: number, desired_col?: numbe
         else if (type === 'l') new_pos = l(text, new_pos)
         else if (type === 'k') new_pos = k(text, new_pos, col)
         else if (type === 'j') new_pos = j(text, new_pos, col)
+        else if (type === '0') new_pos = zero(text, new_pos)
         if (new_pos === pos) return pos
     }
     return new_pos
