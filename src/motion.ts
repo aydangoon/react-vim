@@ -14,14 +14,14 @@ const VIM_WORD_NO_EMPTY_LINE = /\S+/
 const VIM_blank = /([ \t]|(?:\n(?!\n)))+/
 
 export const next_blank = (text: string, pos: number): number => {
-    if (pos >= text.length - 1) return -1
+    if (pos === text.length - 1) return -1
     const match = VIM_blank.exec(text.slice(pos))
     if (!match) return -1
     return pos + match.index
 }
 
 export const w = (text: string, pos: number): number => {
-    if (pos >= text.length - 1) return pos
+    if (pos === text.length - 1) return pos
     const initial_word = VIM_word.exec(text.slice(pos))
     if (!initial_word) return text.length - 1
     if (next_blank(text, pos) === pos) return pos + initial_word.index
@@ -31,7 +31,7 @@ export const w = (text: string, pos: number): number => {
 }
 
 export const W = (text: string, pos: number): number => {
-    if (pos >= text.length - 1) return pos
+    if (pos === text.length - 1) return pos
     const initial_WORD = VIM_WORD.exec(text.slice(pos))
     if (!initial_WORD) return pos
     if (next_blank(text, pos) === pos) return pos + initial_WORD.index
@@ -41,19 +41,19 @@ export const W = (text: string, pos: number): number => {
 }
 
 export const e = (text: string, pos: number): number => {
-    if (pos >= text.length - 1) return text.length - 1
+    if (pos === text.length - 1) return text.length - 1
     const word = VIM_word_NO_EMPTY_LINE.exec(text.slice(pos + 1))
     return word ? pos + word.index + word[0].length : text.length - 1
 }
 
 export const E = (text: string, pos: number): number => {
-    if (pos >= text.length - 1) return text.length - 1
+    if (pos === text.length - 1) return text.length - 1
     const WORD = VIM_WORD_NO_EMPTY_LINE.exec(text.slice(pos + 1))
     return WORD ? pos + WORD.index + WORD[0].length : text.length - 1
 }
 
 export const b = (text: string, pos: number): number => {
-    if (pos <= 0) return pos
+    if (pos === 0) return pos
     const flipped = text.slice(0, pos).split('').reverse().join('')
     const b_flipped = VIM_word.exec(flipped)
     if (!b_flipped) return 0
@@ -62,7 +62,7 @@ export const b = (text: string, pos: number): number => {
 }
 
 export const B = (text: string, pos: number): number => {
-    if (pos <= 0) return pos
+    if (pos === 0) return pos
     const flipped = text.slice(0, pos).split('').reverse().join('')
     const B_flipped = VIM_WORD.exec(flipped)
     if (!B_flipped) return 0
@@ -71,7 +71,7 @@ export const B = (text: string, pos: number): number => {
 }
 
 export const ge = (text: string, pos: number): number => {
-    if (pos <= 0) return pos
+    if (pos === 0) return pos
     const flipped = text
         .slice(0, pos + 1)
         .replace(/\n/g, ' ') // treat newlines as spaces
@@ -83,7 +83,7 @@ export const ge = (text: string, pos: number): number => {
 }
 
 export const gE = (text: string, pos: number): number => {
-    if (pos <= 0) return pos
+    if (pos === 0) return pos
     const flipped = text
         .slice(0, pos + 1)
         .replace(/\n/g, ' ') // treat newlines as spaces
@@ -94,16 +94,32 @@ export const gE = (text: string, pos: number): number => {
     return pos - next_WORD_flipped
 }
 
-export type MotionType = 'w' | 'W' | 'e' | 'E' | 'b' | 'B' | 'ge' | 'gE'
+export const h = (text: string, pos: number): number => {
+    return pos === 0 || text[pos - 1] === '\n' ? pos : pos - 1
+}
+export const l = (text: string, pos: number): number => {
+    return pos === text.length - 1 || text[pos + 1] === '\n' ? pos : pos + 1
+}
+
+export const k = (text: string, pos: number, desired_col: number = 0): number => {
+    const line_start = text.lastIndexOf('\n', pos - 1) + 1
+    const prev_line_start = text.lastIndexOf('\n', line_start - 2) + 1
+    if (line_start === prev_line_start) return pos
+    const prev_line_len = line_start - prev_line_start - 2
+    return prev_line_start + (desired_col < prev_line_len ? desired_col : prev_line_len)
+}
+
+export type MotionType = 'w' | 'W' | 'e' | 'E' | 'b' | 'B' | 'ge' | 'gE' | 'h' | 'l' | 'k'
 export interface Motion {
     count?: number
     type: MotionType
 }
 
-export const motion = (m: Motion, text: string, pos: number): number => {
+export const motion = (m: Motion, text: string, pos: number, desired_col?: number): number => {
     let new_pos = pos
     const count = m.count || 1
     const type = m.type
+    const col = desired_col ?? pos - text.lastIndexOf('\n', pos) + 1
     for (let i = 0; i < count; i++) {
         if (type === 'w') new_pos = w(text, new_pos)
         else if (type === 'W') new_pos = W(text, new_pos)
@@ -113,6 +129,9 @@ export const motion = (m: Motion, text: string, pos: number): number => {
         else if (type === 'B') new_pos = B(text, new_pos)
         else if (type === 'ge') new_pos = ge(text, new_pos)
         else if (type === 'gE') new_pos = gE(text, new_pos)
+        else if (type === 'h') new_pos = h(text, new_pos)
+        else if (type === 'l') new_pos = l(text, new_pos)
+        else if (type === 'k') new_pos = k(text, new_pos, col)
         if (new_pos === pos) return pos
     }
     return new_pos

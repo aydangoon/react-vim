@@ -1,4 +1,4 @@
-import { next_blank, w, W, e, E, b, B, ge, gE, motion } from '../src/motion'
+import { next_blank, w, W, e, E, b, B, ge, gE, h, l, k, motion } from '../src/motion'
 
 describe('next_blank', () => {
     test('word followed by blanks', () => {
@@ -182,6 +182,56 @@ describe('gE', () => {
     })
 })
 
+describe('h', () => {
+    test('basic', () => {
+        expect(h('abc', 1)).toBe(0)
+        expect(h('abc', 2)).toBe(1)
+    })
+    test('start of text', () => {
+        expect(h('abc', 0)).toBe(0)
+    })
+    test('previous is newline', () => {
+        expect(h('\nabc', 1)).toBe(1)
+    })
+})
+
+describe('l', () => {
+    test('basic', () => {
+        expect(l('abc', 1)).toBe(2)
+        expect(l('abc', 0)).toBe(1)
+    })
+    test('end of text', () => {
+        expect(l('abc', 2)).toBe(2)
+    })
+    test('next is newline', () => {
+        expect(l('abc\n', 2)).toBe(2)
+    })
+})
+
+describe('k', () => {
+    test('basic', () => {
+        expect(k('abc\ndef', 4)).toBe(0)
+        expect(k('\nabc\ndef', 5)).toBe(1)
+        expect(k('abc\nd\ne', 6, 2)).toBe(4)
+        expect(k('abc\nd\ne', 4, 2)).toBe(2)
+    })
+    test('initial col greater', () => {
+        expect(k('a\ndef', 4)).toBe(0)
+        expect(k('\na\ndef', 5)).toBe(1)
+    })
+    test('initial col less', () => {
+        expect(k('abc\nd', 4, 2)).toBe(2)
+        expect(k('\nabc\nd', 5, 2)).toBe(3)
+    })
+    test('blank line', () => {
+        expect(k('abc\n\n', 4)).toBe(0)
+    })
+    test('one line', () => {
+        expect(k('abc', 2)).toBe(2)
+        expect(k('abc\ndef', 2)).toBe(2)
+    })
+})
+
 describe('motion', () => {
     test('single motion', () => {
         expect(motion({ type: 'w' }, 'abc def', 0)).toBe(4)
@@ -189,5 +239,12 @@ describe('motion', () => {
     })
     test('multiple motions', () => {
         expect(motion({ type: 'e', count: 2 }, 'abc def', 0)).toBe(6)
+    })
+    test('k multiple motions', () => {
+        expect(motion({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 2)).toBe(2)
+        expect(motion({ type: 'k', count: 3 }, 'abc\nd\ne', 6, 2)).toBe(2)
+        expect(motion({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 1)).toBe(1)
+        expect(motion({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 1)).toBe(1)
+        expect(motion({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 5)).toBe(2)
     })
 })
