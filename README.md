@@ -1,4 +1,4 @@
-# `react-vim`: React Component with Core Vim Key Bindings
+# `react-vim`: React Component for Vim Key Bindings
 
 ## About
 
