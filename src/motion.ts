@@ -10,6 +10,9 @@ const VIM_WORD = /\S+|(?<=\n)\n/
 // match non-blank sequence
 const VIM_WORD_NO_EMPTY_LINE = /\S+/
 
+// match non-blank character
+const VIM_WORD_CHAR = /\S/
+
 // match blank sequence, excluding two consecutive newlines
 const VIM_blank = /([ \t]|(?:\n(?!\n)))+/
 
@@ -148,6 +151,25 @@ export const $ = (text: string, pos: number, options: $Options = {}) => {
     return next_newline === -1
         ? text.length - 1
         : next_newline - (options.in_visual_mode || is_empty ? 0 : 1)
+}
+
+export const g_ = (text: string, pos: number, count: number = 1) => {
+    // move count - 1 lines down
+    for (let i = 0; i < count - 1; i++) {
+        const next_line_start = text.indexOf('\n', pos) + 1
+        if (next_line_start === 0) break
+        pos = next_line_start
+    }
+    // empty line
+    if (text[pos] === '\n') return pos
+    // find index of last non-blank or start of line if none
+    const line_start = text.lastIndexOf('\n', pos) + 1
+    let last_nonblank = line_start
+    for (let i = line_start; i < text.length; i++) {
+        if (VIM_WORD_CHAR.test(text[i])) last_nonblank = i
+        if (text[i] === '\n') break
+    }
+    return last_nonblank
 }
 
 export type MotionType =

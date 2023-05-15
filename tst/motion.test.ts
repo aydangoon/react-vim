@@ -300,6 +300,29 @@ describe('$', () => {
     })
 })
 
+describe('g_', () => {
+    test('basic', () => {
+        expect(motion.g_(' abc', 0)).toBe(3)
+        expect(motion.g_(' abc\n', 0)).toBe(3)
+        expect(motion.g_('\n abc\n\n', 1)).toBe(4)
+    })
+    test('empty line', () => {
+        expect(motion.g_('\n\n', 0)).toBe(0)
+        expect(motion.g_('\n\n', 1)).toBe(1)
+    })
+    test('spaces', () => {
+        expect(motion.g_('   a ', 4)).toBe(3)
+        expect(motion.g_('   ab ', 1)).toBe(4)
+        expect(motion.g_('   ab \n', 5)).toBe(4)
+    })
+    test('count', () => {
+        expect(motion.g_('ab\ncd', 0, 2)).toBe(4)
+        expect(motion.g_('\nab\ncd', 1, 2)).toBe(5)
+        expect(motion.g_('ab\n\nc\n d \n', 0, 4)).toBe(7)
+        expect(motion.g_('ab\n\nc\n   \n', 0, 4)).toBe(6)
+    })
+})
+
 describe('motion', () => {
     test('single motion', () => {
         expect(motion.execute({ type: 'w' }, 'abc def', 0)).toBe(4)
