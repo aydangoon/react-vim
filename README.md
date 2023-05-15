@@ -2,9 +2,9 @@
 
 ## About
 
-`react-vim` is a React component comprised of a textarea supporting core Vim key bindings and a display of the editor's Vim state. `react-vim` is **not** web wrapper for the Vim text editor. It **isn't** intended to support files, scrolling, crash recovery, or advanced editing. It's meant for `<500` word text and to support core Vim features, namely: motion, insertion, deletion, changing, macros, and find/replace.
+`react-vim` is comprised of a textarea supporting core Vim key bindings and a display of the editor's Vim state. `react-vim` is _not_ web wrapper for the Vim text editor. It _isn't_ intended to support files, scrolling, crash recovery, or advanced editing. It's meant for `<500` word text and to support Vim's core features, namely: motion, insertion, deletion, macros, find/replace, and replacing.
 
-Features are implemented according to the [Vim spec](https://vimdoc.sourceforge.net/htmldoc/help.html), with notable exceptions mentioned in this README.
+Features are implemented according to the [Vim Docs](https://vimdoc.sourceforge.net/htmldoc/help.html), with notable exceptions mentioned in this README.
 
 ## Usage
 
