@@ -323,7 +323,7 @@ describe('g_', () => {
     })
 })
 
-describe('motion', () => {
+describe('execute', () => {
     test('single motion', () => {
         expect(motion.execute({ type: 'w' }, 'abc def', 0)).toBe(4)
         expect(motion.execute({ type: 'W' }, 'abc def', 0)).toBe(4)

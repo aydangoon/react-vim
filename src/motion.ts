@@ -188,6 +188,7 @@ export type MotionType =
     | '0'
     | '^'
     | '$'
+    | 'g_'
 export interface Motion {
     count?: number
     type: MotionType
@@ -212,6 +213,13 @@ export const execute = (m: Motion, text: string, pos: number, desired_col?: numb
         else if (type === 'k') new_pos = k(text, new_pos, col)
         else if (type === 'j') new_pos = j(text, new_pos, col)
         else if (type === '0') new_pos = zero(text, new_pos)
+        else if (type === '^') new_pos = caret(text, new_pos)
+        else if (type === '$') new_pos = $(text, new_pos, { count }) // TODO: visual mode option
+        else if (type === 'g_') new_pos = g_(text, new_pos, count)
+
+        // these motion commands don't repeat <count> times
+        if (type === '$' || type === 'g_') break
+        // if a motion command returns its starting position it is done
         if (new_pos === pos) return pos
     }
     return new_pos
