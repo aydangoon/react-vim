@@ -101,15 +101,26 @@ export const l = (text: string, pos: number): number => {
     return pos === text.length - 1 || text[pos + 1] === '\n' ? pos : pos + 1
 }
 
-export const k = (text: string, pos: number, desired_col: number = 0): number => {
+export const k = (text: string, pos: number, desired_col?: number): number => {
     const line_start = text.lastIndexOf('\n', pos - 1) + 1
     const prev_line_start = text.lastIndexOf('\n', line_start - 2) + 1
     if (line_start === prev_line_start) return pos
+    const col = desired_col ?? pos - line_start
     const prev_line_len = line_start - prev_line_start - 2
-    return prev_line_start + (desired_col < prev_line_len ? desired_col : prev_line_len)
+    return prev_line_start + (col < prev_line_len ? col : prev_line_len)
 }
 
-export type MotionType = 'w' | 'W' | 'e' | 'E' | 'b' | 'B' | 'ge' | 'gE' | 'h' | 'l' | 'k'
+export const j = (text: string, pos: number, desired_col?: number): number => {
+    const line_start = text.lastIndexOf('\n', pos - 1) + 1
+    const next_line_start = text.indexOf('\n', pos) + 1
+    if (next_line_start === 0 || next_line_start === text.length) return pos
+    const col = desired_col ?? pos - line_start
+    let next_line_end = text.indexOf('\n', next_line_start) - 1 // exclude newline
+    next_line_end = next_line_end < 0 ? text.length - 1 : next_line_end
+    return Math.min(next_line_start + col, next_line_end)
+}
+
+export type MotionType = 'w' | 'W' | 'e' | 'E' | 'b' | 'B' | 'ge' | 'gE' | 'h' | 'l' | 'k' | 'j'
 export interface Motion {
     count?: number
     type: MotionType
@@ -119,7 +130,7 @@ export const motion = (m: Motion, text: string, pos: number, desired_col?: numbe
     let new_pos = pos
     const count = m.count || 1
     const type = m.type
-    const col = desired_col ?? pos - text.lastIndexOf('\n', pos) + 1
+    const col = desired_col ?? text.lastIndexOf('\n') + 1 - pos
     for (let i = 0; i < count; i++) {
         if (type === 'w') new_pos = w(text, new_pos)
         else if (type === 'W') new_pos = W(text, new_pos)
@@ -132,6 +143,7 @@ export const motion = (m: Motion, text: string, pos: number, desired_col?: numbe
         else if (type === 'h') new_pos = h(text, new_pos)
         else if (type === 'l') new_pos = l(text, new_pos)
         else if (type === 'k') new_pos = k(text, new_pos, col)
+        else if (type === 'j') new_pos = j(text, new_pos, col)
         if (new_pos === pos) return pos
     }
     return new_pos

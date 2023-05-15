@@ -1,4 +1,4 @@
-import { next_blank, w, W, e, E, b, B, ge, gE, h, l, k, motion } from '../src/motion'
+import { next_blank, w, W, e, E, b, B, ge, gE, h, l, k, j, motion } from '../src/motion'
 
 describe('next_blank', () => {
     test('word followed by blanks', () => {
@@ -211,6 +211,7 @@ describe('l', () => {
 describe('k', () => {
     test('basic', () => {
         expect(k('abc\ndef', 4)).toBe(0)
+        expect(k('abc\ndef', 5)).toBe(1)
         expect(k('\nabc\ndef', 5)).toBe(1)
         expect(k('abc\nd\ne', 6, 2)).toBe(4)
         expect(k('abc\nd\ne', 4, 2)).toBe(2)
@@ -232,6 +233,29 @@ describe('k', () => {
     })
 })
 
+describe('j', () => {
+    test('basic', () => {
+        expect(j('abc\ndef', 0)).toBe(4)
+        expect(j('abc\ndef\n', 1)).toBe(5)
+        expect(j('abc\nd\ne', 0, 2)).toBe(4)
+        expect(j('abc\nd\nef', 4, 2)).toBe(7)
+    })
+    test('initial col greater', () => {
+        expect(j('abc\nd', 2)).toBe(4)
+        expect(j('\nabc\nde', 3)).toBe(6)
+    })
+    test('initial col less', () => {
+        expect(j('a\nbcd', 0, 2)).toBe(4)
+        expect(j('\na\nbcd', 1, 2)).toBe(5)
+    })
+    test('blank line', () => {
+        expect(j('\n\nabc', 1)).toBe(2)
+    })
+    test('one line', () => {
+        expect(j('abc', 2)).toBe(2)
+        expect(j('abc\ndef', 4)).toBe(4)
+    })
+})
 describe('motion', () => {
     test('single motion', () => {
         expect(motion({ type: 'w' }, 'abc def', 0)).toBe(4)
@@ -246,5 +270,10 @@ describe('motion', () => {
         expect(motion({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 1)).toBe(1)
         expect(motion({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 1)).toBe(1)
         expect(motion({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 5)).toBe(2)
+    })
+    test('j multiple motions', () => {
+        expect(motion({ type: 'j', count: 2 }, 'abc\nd\ne', 2)).toBe(6)
+        expect(motion({ type: 'j', count: 4 }, 'abc\nd\ne', 2)).toBe(6)
+        expect(motion({ type: 'j', count: 2 }, 'abc\nd\nefg', 2)).toBe(8)
     })
 })
