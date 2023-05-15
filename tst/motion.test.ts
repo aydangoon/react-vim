@@ -278,6 +278,28 @@ describe('^', () => {
     })
 })
 
+describe('$', () => {
+    test('basic', () => {
+        expect(motion.$(' abc', 0)).toBe(3)
+        expect(motion.$(' abc\n', 1)).toBe(3)
+        expect(motion.$('\n abc\n\n', 1)).toBe(4)
+    })
+    test('empty line', () => {
+        expect(motion.$('\n\n', 0)).toBe(0)
+        expect(motion.$('\n\n', 1)).toBe(1)
+    })
+    test('visual mode includes newline', () => {
+        expect(motion.$('ab\n', 0, { in_visual_mode: true })).toBe(2)
+        expect(motion.$('ab\n\n', 0, { in_visual_mode: true })).toBe(2)
+        expect(motion.$('\n\n', 0, { in_visual_mode: true })).toBe(0)
+    })
+    test('count', () => {
+        expect(motion.$('ab\ncd', 0, { count: 2 })).toBe(4)
+        expect(motion.$('\nab\ncd', 1, { count: 2 })).toBe(5)
+        expect(motion.$('ab\n\nc\nd\n', 0, { count: 4 })).toBe(6)
+    })
+})
+
 describe('motion', () => {
     test('single motion', () => {
         expect(motion.execute({ type: 'w' }, 'abc def', 0)).toBe(4)

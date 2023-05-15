@@ -131,6 +131,25 @@ export const caret = (text: string, pos: number) => {
     return word ? line_start + word.index : line_end
 }
 
+interface $Options {
+    count?: number
+    in_visual_mode?: boolean
+}
+export const $ = (text: string, pos: number, options: $Options = {}) => {
+    const count = options.count ?? 0
+    // move count - 1 lines down
+    for (let i = 0; i < count - 1; i++) {
+        const next_line_start = text.indexOf('\n', pos) + 1
+        if (next_line_start === 0) break
+        pos = next_line_start
+    }
+    const next_newline = text.indexOf('\n', pos)
+    const is_empty = pos === next_newline
+    return next_newline === -1
+        ? text.length - 1
+        : next_newline - (options.in_visual_mode || is_empty ? 0 : 1)
+}
+
 export type MotionType =
     | 'w'
     | 'W'
@@ -145,6 +164,8 @@ export type MotionType =
     | 'k'
     | 'j'
     | '0'
+    | '^'
+    | '$'
 export interface Motion {
     count?: number
     type: MotionType
