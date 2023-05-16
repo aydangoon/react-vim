@@ -1,6 +1,6 @@
 // import './index.css'
 // import { useEffect, useRef } from 'react'
-// import Vim from './vim'
+import Vim from './vim'
 // const VimView = () => {
 //     const vimRef = useRef(null)
 //     let vim: Vim | null = null

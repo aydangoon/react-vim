@@ -3,66 +3,95 @@
  * @module
  */
 // match (alpanumber and _) sequence, single non-blank character, or empty line
-const VIM_word = /\w+|[^\w\s]|(?<=\n)\n/
+const RGX_word = /\w+|[^\w\s]|(?<=\n)\n/
 
 // match (alpanumber and _) sequence, or single non-blank character
-const VIM_word_NO_EMPTY_LINE = /\w+|[^\w\s]/
+const RGX_word_NO_EMPTY_LINE = /\w+|[^\w\s]/
 
 // match non-blank sequence, or empty line
-const VIM_WORD = /\S+|(?<=\n)\n/
+const RGX_WORD = /\S+|(?<=\n)\n/
 
 // match non-blank sequence
-const VIM_WORD_NO_EMPTY_LINE = /\S+/
+const RGX_WORD_NO_EMPTY_LINE = /\S+/
 
 // match non-blank character
-const VIM_WORD_CHAR = /\S/
+const RGX_WORD_CHAR = /\S/
 
 // match blank sequence, excluding two consecutive newlines
-const VIM_blank = /([ \t]|(?:\n(?!\n)))+/
+const RGX_blank = /([ \t]|(?:\n(?!\n)))+/
+
+export const MOTION_TYPES = [
+    'w',
+    'W',
+    'e',
+    'E',
+    'b',
+    'B',
+    'ge',
+    'gE',
+    'h',
+    'l',
+    'k',
+    'j',
+    '0',
+    '^',
+    '$',
+    'g_',
+] as const
+
+export type MotionType = (typeof MOTION_TYPES)[number]
+
+export interface Motion {
+    count?: number
+    type: MotionType
+    options?: $Options // TODO: union more options as needed
+}
+
+export const RGX_motion = /w|W|e|E|b|B|(g(e|E|_)?)|h|l|k|j|0|\^|\$/
 
 export const next_blank = (text: string, pos: number): number => {
     if (pos === text.length - 1) return -1
-    const match = VIM_blank.exec(text.slice(pos))
+    const match = RGX_blank.exec(text.slice(pos))
     if (!match) return -1
     return pos + match.index
 }
 
 export const w = (text: string, pos: number): number => {
     if (pos === text.length - 1) return pos
-    const initial_word = VIM_word.exec(text.slice(pos))
+    const initial_word = RGX_word.exec(text.slice(pos))
     if (!initial_word) return text.length - 1
     if (next_blank(text, pos) === pos) return pos + initial_word.index
     const offset = initial_word[0].length
-    const next_word = VIM_word.exec(text.slice(pos + offset))
+    const next_word = RGX_word.exec(text.slice(pos + offset))
     return next_word ? pos + offset + next_word.index : text.length - 1
 }
 
 export const W = (text: string, pos: number): number => {
     if (pos === text.length - 1) return pos
-    const initial_WORD = VIM_WORD.exec(text.slice(pos))
+    const initial_WORD = RGX_WORD.exec(text.slice(pos))
     if (!initial_WORD) return pos
     if (next_blank(text, pos) === pos) return pos + initial_WORD.index
     const offset = initial_WORD[0].length
-    const next_WORD = VIM_WORD.exec(text.slice(pos + offset))
+    const next_WORD = RGX_WORD.exec(text.slice(pos + offset))
     return next_WORD ? pos + offset + next_WORD.index : text.length - 1
 }
 
 export const e = (text: string, pos: number): number => {
     if (pos === text.length - 1) return text.length - 1
-    const word = VIM_word_NO_EMPTY_LINE.exec(text.slice(pos + 1))
+    const word = RGX_word_NO_EMPTY_LINE.exec(text.slice(pos + 1))
     return word ? pos + word.index + word[0].length : text.length - 1
 }
 
 export const E = (text: string, pos: number): number => {
     if (pos === text.length - 1) return text.length - 1
-    const WORD = VIM_WORD_NO_EMPTY_LINE.exec(text.slice(pos + 1))
+    const WORD = RGX_WORD_NO_EMPTY_LINE.exec(text.slice(pos + 1))
     return WORD ? pos + WORD.index + WORD[0].length : text.length - 1
 }
 
 export const b = (text: string, pos: number): number => {
     if (pos === 0) return pos
     const flipped = text.slice(0, pos).split('').reverse().join('')
-    const b_flipped = VIM_word.exec(flipped)
+    const b_flipped = RGX_word.exec(flipped)
     if (!b_flipped) return 0
     const { index, 0: word } = b_flipped
     return pos - index - word.length + (word === '\n' ? 1 : 0) // bc flipped, empty line needs +1
@@ -71,7 +100,7 @@ export const b = (text: string, pos: number): number => {
 export const B = (text: string, pos: number): number => {
     if (pos === 0) return pos
     const flipped = text.slice(0, pos).split('').reverse().join('')
-    const B_flipped = VIM_WORD.exec(flipped)
+    const B_flipped = RGX_WORD.exec(flipped)
     if (!B_flipped) return 0
     const { index, 0: WORD } = B_flipped
     return pos - index - WORD.length + (WORD === '\n' ? 1 : 0) // bc flipped, empty line needs +1
@@ -134,7 +163,7 @@ export const caret = (text: string, pos: number) => {
     let line_end = text.indexOf('\n', pos) - 1 // exclude newline
     line_end = line_end < 0 ? text.length - 1 : line_end
     if (line_end < line_start) return pos
-    const word = VIM_word.exec(text.substring(line_start, line_end + 1))
+    const word = RGX_word.exec(text.substring(line_start, line_end + 1))
     return word ? line_start + word.index : line_end
 }
 
@@ -170,35 +199,13 @@ export const g_ = (text: string, pos: number, count: number = 1) => {
     const line_start = text.lastIndexOf('\n', pos) + 1
     let last_nonblank = line_start
     for (let i = line_start; i < text.length; i++) {
-        if (VIM_WORD_CHAR.test(text[i])) last_nonblank = i
+        if (RGX_WORD_CHAR.test(text[i])) last_nonblank = i
         if (text[i] === '\n') break
     }
     return last_nonblank
 }
 
-export type MotionType =
-    | 'w'
-    | 'W'
-    | 'e'
-    | 'E'
-    | 'b'
-    | 'B'
-    | 'ge'
-    | 'gE'
-    | 'h'
-    | 'l'
-    | 'k'
-    | 'j'
-    | '0'
-    | '^'
-    | '$'
-    | 'g_'
-export interface Motion {
-    count?: number
-    type: MotionType
-}
-
-export const execute = (m: Motion, text: string, pos: number, desired_col?: number): number => {
+export const move = (m: Motion, text: string, pos: number, desired_col?: number): number => {
     let new_pos = pos
     const count = m.count || 1
     const type = m.type
@@ -218,7 +225,11 @@ export const execute = (m: Motion, text: string, pos: number, desired_col?: numb
         else if (type === 'j') new_pos = j(text, new_pos, col)
         else if (type === '0') new_pos = zero(text, new_pos)
         else if (type === '^') new_pos = caret(text, new_pos)
-        else if (type === '$') new_pos = $(text, new_pos, { count }) // TODO: visual mode option
+        else if (type === '$')
+            new_pos = $(text, new_pos, {
+                count,
+                in_visual_mode: m.options?.in_visual_mode,
+            }) // TODO: visual mode option
         else if (type === 'g_') new_pos = g_(text, new_pos, count)
 
         // these motion commands don't repeat <count> times

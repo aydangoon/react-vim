@@ -323,24 +323,24 @@ describe('g_', () => {
     })
 })
 
-describe('execute', () => {
+describe('move', () => {
     test('single motion', () => {
-        expect(motion.execute({ type: 'w' }, 'abc def', 0)).toBe(4)
-        expect(motion.execute({ type: 'W' }, 'abc def', 0)).toBe(4)
+        expect(motion.move({ type: 'w' }, 'abc def', 0)).toBe(4)
+        expect(motion.move({ type: 'W' }, 'abc def', 0)).toBe(4)
     })
     test('multiple motions', () => {
-        expect(motion.execute({ type: 'e', count: 2 }, 'abc def', 0)).toBe(6)
+        expect(motion.move({ type: 'e', count: 2 }, 'abc def', 0)).toBe(6)
     })
     test('k multiple motions', () => {
-        expect(motion.execute({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 2)).toBe(2)
-        expect(motion.execute({ type: 'k', count: 3 }, 'abc\nd\ne', 6, 2)).toBe(2)
-        expect(motion.execute({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 1)).toBe(1)
-        expect(motion.execute({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 1)).toBe(1)
-        expect(motion.execute({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 5)).toBe(2)
+        expect(motion.move({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 2)).toBe(2)
+        expect(motion.move({ type: 'k', count: 3 }, 'abc\nd\ne', 6, 2)).toBe(2)
+        expect(motion.move({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 1)).toBe(1)
+        expect(motion.move({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 1)).toBe(1)
+        expect(motion.move({ type: 'k', count: 2 }, 'abc\nd\ne', 6, 5)).toBe(2)
     })
     test('j multiple motions', () => {
-        expect(motion.execute({ type: 'j', count: 2 }, 'abc\nd\ne', 2)).toBe(6)
-        expect(motion.execute({ type: 'j', count: 4 }, 'abc\nd\ne', 2)).toBe(6)
-        expect(motion.execute({ type: 'j', count: 2 }, 'abc\nd\nefg', 2)).toBe(8)
+        expect(motion.move({ type: 'j', count: 2 }, 'abc\nd\ne', 2)).toBe(6)
+        expect(motion.move({ type: 'j', count: 4 }, 'abc\nd\ne', 2)).toBe(6)
+        expect(motion.move({ type: 'j', count: 2 }, 'abc\nd\nefg', 2)).toBe(8)
     })
 })
