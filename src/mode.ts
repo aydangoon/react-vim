@@ -8,7 +8,7 @@ export enum Mode {
     CommandLine = '-- COMMAND LINE --',
 }
 
-export const MODE_COMMAND_TYPES = ['I', 'V', 'R'] as const
+export const MODE_COMMAND_TYPES = ['i', 'v', 'R'] as const
 export type ModeCommandType = (typeof MODE_COMMAND_TYPES)[number]
 
 export const RGX_mode_command_type = new RegExp(MODE_COMMAND_TYPES.join('|'))

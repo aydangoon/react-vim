@@ -22,4 +22,11 @@ describe('parse_command', () => {
     test('invalid motions', () => {
         expect(parse_command('10')).toBeNull()
     })
+
+    test('valid mode commands', () => {
+        expect(parse_command('i')).toEqual({ count: 1, type: 'i' })
+        expect(parse_command('v')).toEqual({ count: 1, type: 'v' })
+        expect(parse_command('R')).toEqual({ count: 1, type: 'R' })
+        expect(parse_command('3v')).toEqual({ count: 3, type: 'v' })
+    })
 })
