@@ -3,8 +3,9 @@
  * @module
  */
 
-import { Mode } from './mode'
+import { MODE_COMMAND_TYPES, Mode, ModeCommandType, switch_mode } from './mode'
 import { Command, parse_command } from './command'
+import { MOTION_TYPES, Motion, MotionType, get_column, move } from './motion'
 
 /**
  * The Vim state. Constructed with a textarea and input elements or a string. If constructed with
@@ -38,7 +39,6 @@ class Vim {
         this.cmd_buffer += char
         const cmd = parse_command(this.cmd_buffer)
         if (!cmd) return
-        this.cmd_buffer = ''
 
         // attach additional appropriate command-based options derived from
         // the current state
@@ -48,10 +48,32 @@ class Vim {
                 break
         }
 
+        this.cmd_buffer = ''
         this.execute_command(cmd)
     }
 
     execute_command(cmd: Command) {
+        const { count, type, options } = cmd
+        // motion
+        if (MOTION_TYPES.includes(<any>type)) {
+            const motion_type = <MotionType>type
+            const col = get_column(this.text, this.cursor)
+            const new_pos = move({ count, type: motion_type, options }, this.text, this.cursor, col)
+            switch (this.mode) {
+                case Mode.Normal:
+                    this.cursor = new_pos
+                    break
+                case Mode.Visual:
+                    const start = Math.min(this.cursor, new_pos)
+                    const end = Math.max(this.cursor, new_pos)
+                    this.selection = [start, end + 1]
+            }
+        }
+        // mode command
+        if (MODE_COMMAND_TYPES.includes(<any>type)) {
+            this.mode = switch_mode(this.mode, type as ModeCommandType)
+        }
+
         // TODO: update state and elements wrt the command
     }
 }

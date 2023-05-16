@@ -4,7 +4,7 @@ import { ModeCommandType, RGX_mode_command_type } from './mode'
 type CommandOptions = { [key: string]: any }
 export type CommandType = MotionType | ModeCommandType
 export interface Command {
-    count: number
+    count?: number
     type: CommandType
     options?: CommandOptions
 }

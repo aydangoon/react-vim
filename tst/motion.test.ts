@@ -1,5 +1,17 @@
 import * as motion from '../src/motion'
 
+describe('motion.get_column', () => {
+    test('basic', () => {
+        expect(motion.get_column('abc', 0)).toBe(0)
+        expect(motion.get_column('abc\nd', 4)).toBe(0)
+        expect(motion.get_column('abc\ndef', 6)).toBe(2)
+    })
+    test('empty line', () => {
+        expect(motion.get_column('\n', 0)).toBe(0)
+        expect(motion.get_column('\n\n', 1)).toBe(0)
+    })
+})
+
 describe('motion.next_blank', () => {
     test('word followed by blanks', () => {
         expect(motion.next_blank('abc  ', 0)).toBe(3)

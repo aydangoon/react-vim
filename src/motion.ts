@@ -49,6 +49,9 @@ export interface Motion {
 
 export const RGX_motion = /w|W|e|E|b|B|(g(e|E|_)?)|h|l|k|j|0|\^|\$/
 
+export const get_column = (text: string, pos: number): number =>
+    text[pos] === '\n' ? 0 : pos - (text.lastIndexOf('\n', pos - 1) + 1)
+
 export const next_blank = (text: string, pos: number): number => {
     if (pos === text.length - 1) return -1
     const match = RGX_blank.exec(text.slice(pos))
@@ -209,7 +212,7 @@ export const move = (m: Motion, text: string, pos: number, desired_col?: number)
     let new_pos = pos
     const count = m.count || 1
     const type = m.type
-    const col = desired_col ?? text.lastIndexOf('\n') + 1 - pos
+    const col = desired_col ?? get_column(text, pos)
     for (let i = 0; i < count; i++) {
         if (type === 'w') new_pos = w(text, new_pos)
         else if (type === 'W') new_pos = W(text, new_pos)
@@ -229,7 +232,8 @@ export const move = (m: Motion, text: string, pos: number, desired_col?: number)
             new_pos = $(text, new_pos, {
                 count,
                 in_visual_mode: m.options?.in_visual_mode,
-            }) // TODO: visual mode option
+            })
+        // TODO: visual mode option
         else if (type === 'g_') new_pos = g_(text, new_pos, count)
 
         // these motion commands don't repeat <count> times
