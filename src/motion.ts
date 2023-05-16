@@ -1,3 +1,7 @@
+/**
+ * Functions for motions on text.
+ * @module
+ */
 // match (alpanumber and _) sequence, single non-blank character, or empty line
 const VIM_word = /\w+|[^\w\s]|(?<=\n)\n/
 
