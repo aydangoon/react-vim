@@ -3,4 +3,6 @@ build
 dist
 docs
 
+# misc
+.VSCodeCounter
 test.txt

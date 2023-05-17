@@ -211,37 +211,36 @@ export const g_ = (text: string, pos: number, count: number = 1) => {
 }
 
 export const move = (m: Motion, text: string, pos: number, desired_col?: number): number => {
-    let new_pos = pos
     const count = m.count || 1
     const type = m.type
     const col = desired_col ?? get_column(text, pos)
     for (let i = 0; i < count; i++) {
-        if (type === 'w') new_pos = w(text, new_pos)
-        else if (type === 'W') new_pos = W(text, new_pos)
-        else if (type === 'e') new_pos = e(text, new_pos)
-        else if (type === 'E') new_pos = E(text, new_pos)
-        else if (type === 'b') new_pos = b(text, new_pos)
-        else if (type === 'B') new_pos = B(text, new_pos)
-        else if (type === 'ge') new_pos = ge(text, new_pos)
-        else if (type === 'gE') new_pos = gE(text, new_pos)
-        else if (type === 'h') new_pos = h(text, new_pos)
-        else if (type === 'l') new_pos = l(text, new_pos)
-        else if (type === 'k') new_pos = k(text, new_pos, col)
-        else if (type === 'j') new_pos = j(text, new_pos, col)
-        else if (type === '0') new_pos = zero(text, new_pos)
-        else if (type === '^') new_pos = caret(text, new_pos)
-        else if (type === '$')
-            new_pos = $(text, new_pos, {
-                count,
-                in_visual_mode: m.options?.in_visual_mode,
-            })
-        // TODO: visual mode option
-        else if (type === 'g_') new_pos = g_(text, new_pos, count)
-
-        // these motion commands don't repeat <count> times
-        if (type === '$' || type === 'g_') break
-        // if a motion command returns its starting position it is done
-        if (new_pos === pos) return pos
+        const prev_pos = pos
+        pos = (() => {
+            // prettier-ignore
+            switch (type) {
+                case 'w': return w(text, pos)
+                case 'W': return W(text, pos)
+                case 'e': return e(text, pos)
+                case 'E': return E(text, pos)
+                case 'b': return b(text, pos)
+                case 'B': return B(text, pos)
+                case 'ge': return ge(text, pos)
+                case 'gE': return gE(text, pos)
+                case 'h': return h(text, pos)
+                case 'l': return l(text, pos)
+                case 'k': return k(text, pos, col)
+                case 'j': return j(text, pos, col)
+                case '0': return zero(text, pos)
+                case '^': return caret(text, pos)
+                case '$': return $(text, pos, { count, in_visual_mode: m.options?.in_visual_mode})
+                case 'g_': return g_(text, pos, count)
+                default: return pos
+            }
+        })()
+        // stop for motions that don't repeat <count> times or
+        // if a motion command returns its starting position
+        if (type === '$' || type === 'g_' || prev_pos === pos) break
     }
-    return new_pos
+    return pos
 }
