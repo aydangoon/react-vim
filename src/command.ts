@@ -7,6 +7,7 @@ export enum Mode {
     VisualLine = '-- VISUAL LINE --',
     VisualBlock = '-- VISUAL BLOCK --',
     Replace = '-- REPLACE --',
+    SingleReplace = ' -- SINGLE REPLACE --',
     CommandLine = '-- COMMAND LINE --',
 }
 

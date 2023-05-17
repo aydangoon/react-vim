@@ -42,12 +42,21 @@ class Vim {
         }
 
         switch (this.mode) {
-            case Mode.Normal:
-            case Mode.Visual:
-                this.push_to_cmd_buffer(key)
-                break
             case Mode.Insert:
                 this.insert_input(key)
+                break
+            case Mode.SingleReplace:
+                if (
+                    this.text.length !== 0 &&
+                    this.cursor !== this.text.length &&
+                    this.text[this.cursor] !== '\n'
+                ) {
+                    this.text =
+                        this.text.slice(0, this.cursor) +
+                        key_event_key_to_char(key) +
+                        this.text.slice(this.cursor + 1)
+                }
+                this.mode = Mode.Normal
                 break
             case Mode.Replace:
                 //this.handle_input_replace(key)
@@ -55,6 +64,8 @@ class Vim {
             case Mode.CommandLine:
                 this.command_line_input(key)
                 break
+            default:
+                this.push_to_cmd_buffer(key)
         }
     }
 
@@ -218,7 +229,9 @@ class Vim {
     Y(cmd: Command) {}
     p(cmd: Command) {}
     P(cmd: Command) {}
-    r(cmd: Command) {}
+    r(cmd: Command) {
+        this.mode = Mode.SingleReplace
+    }
     R(cmd: Command) {
         this.mode = Mode.Replace
     }

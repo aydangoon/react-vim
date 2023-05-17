@@ -203,6 +203,20 @@ describe('Vim non-motion commands', () => {
         expect(v.text).toEqual('abc def')
         expect(v.cursor).toEqual(3)
     })
+    test('r', () => {
+        const v = make_vim('abc')
+        v.execute_command({ type: 'r' })
+        expect(v.text).toEqual('abc')
+        v.input('d')
+        expect(v.text).toEqual('dbc')
+        expect(v.cursor).toEqual(0)
+        expect(v.mode).toEqual(Mode.Normal)
+        v.execute_command({ type: 'dd' })
+        v.execute_command({ type: 'r' })
+        v.input('d')
+        expect(v.text).toEqual('')
+        expect(v.cursor).toEqual(0)
+    })
 })
 
 const input_string = (v: Vim, s: string) => {
