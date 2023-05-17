@@ -4,7 +4,7 @@
  */
 
 import { Mode, Command, parse_command } from './command'
-import { MOTION_TYPES, MotionType, get_column, move } from './motion'
+import { MOTION_TYPES, MotionType, W, get_column, move as motion_move } from './motion'
 import { key_event_key_to_char } from './utils'
 
 /**
@@ -15,14 +15,13 @@ class Vim {
     mode: Mode = Mode.Normal
     text: string = ''
     textarea: HTMLTextAreaElement | null = null
-    // the text in the command line. e.g. ':%s/foo/bar/g'
-    cmdline_text: string = Mode.Normal
+    cmdline_text: string = Mode.Normal // the text in the command line. e.g. ':%s/foo/bar/g'
     cmdline: HTMLInputElement | null = null
     cursor: number = 0
     desired_col: number = 0
     selection: [number, number] = [0, 0]
-    // the command being built, e.g. 'd3w'.
-    cmd_buffer: string = ''
+    cmd_buffer: string = '' // the command being built, e.g. 'd3w'.
+    is_appending: boolean = false // was last command an append?
 
     constructor(textarea: HTMLTextAreaElement, cmdline: HTMLInputElement)
     constructor(text: string)
@@ -96,6 +95,7 @@ class Vim {
 
         // attach additional appropriate command-based options derived from
         // the current state
+        // TODO: probably delete this?
         switch (cmd.type) {
             case '$':
                 cmd.options['in_visual_mode'] = this.mode === Mode.Visual
@@ -107,32 +107,8 @@ class Vim {
     }
 
     execute_command(cmd: Command) {
-        const { count, type, options } = cmd
-        const col = get_column(this.text, this.cursor)
-        // motion command
-        if (MOTION_TYPES.includes(<any>type)) {
-            const motion_type = <MotionType>type
-            const desired_col = this.desired_col > col ? this.desired_col : col
-            //console.log('cmd', cmd)
-            const new_pos = move(
-                { count, type: motion_type, options },
-                this.text,
-                this.cursor,
-                desired_col
-            )
-            switch (this.mode) {
-                case Mode.Normal:
-                    this.cursor = new_pos
-                    break
-                case Mode.Visual:
-                    const start = Math.min(this.cursor, new_pos)
-                    const end = Math.max(this.cursor, new_pos)
-                    this.selection = [start, end + 1]
-            }
-            // all other commands
-        } else {
-            // prettier-ignore
-            switch (type) {
+        // prettier-ignore
+        switch (cmd.type) {
                 case 'a':  this.a(cmd); break
                 case 'A':  this.A(cmd); break
                 case 'i':  this.i(cmd); break
@@ -159,10 +135,8 @@ class Vim {
                 case 'U':  this.U(cmd); break
                 case 'v':  this.v(cmd); break
                 case 'V':  this.V(cmd); break
+                default:   this.move(cmd); break
             }
-        }
-
-        // TODO: update state and elements wrt the command
 
         // update desired_col
         const new_col = get_column(this.text, this.cursor)
@@ -170,14 +144,46 @@ class Vim {
         this.sync_textarea()
     }
 
-    a(cmd: Command) {}
-    A(cmd: Command) {}
+    a(cmd: Command) {
+        this.mode = Mode.Insert
+        this.is_appending = true
+        this.cursor++
+    }
+    A(cmd: Command) {
+        this.move({ type: '$' })
+        this.a(cmd)
+    }
     i(cmd: Command) {
         this.mode = Mode.Insert
     }
-    I(cmd: Command) {}
-    o(cmd: Command) {}
-    O(cmd: Command) {}
+    I(cmd: Command) {
+        this.move({ type: '^' })
+        this.mode = Mode.Insert
+    }
+    o(cmd: Command) {
+        let next_newline = this.text.indexOf('\n', this.cursor)
+        if (next_newline === -1) {
+            this.text += '\n'
+            this.cursor = this.text.length
+            this.is_appending = true
+        } else {
+            this.text = this.text.slice(0, next_newline) + '\n' + this.text.slice(next_newline)
+            this.cursor = next_newline + 1
+        }
+        this.mode = Mode.Insert
+    }
+    O(cmd: Command) {
+        let prev_newline = this.text.lastIndexOf('\n', this.cursor - 1)
+        if (this.cursor === 0 || prev_newline === -1) {
+            this.text = '\n' + this.text
+            this.cursor = 0
+        } else {
+            this.text = this.text.slice(0, prev_newline) + '\n' + this.text.slice(prev_newline)
+            this.cursor = prev_newline + 1
+        }
+        this.is_appending = true
+        this.mode = Mode.Insert
+    }
     d(cmd: Command) {}
     dd(cmd: Command) {}
     D(cmd: Command) {}
@@ -208,12 +214,35 @@ class Vim {
         }
     }
     V(cmd: Command) {}
+    move({ type, count, options }: Command) {
+        const motion_type = <MotionType>type
+        const col = get_column(this.text, this.cursor)
+        const desired_col = this.desired_col > col ? this.desired_col : col
+        //console.log('cmd', cmd)
+        const new_pos = motion_move(
+            { count, type: motion_type, options },
+            this.text,
+            this.cursor,
+            desired_col
+        )
+        switch (this.mode) {
+            case Mode.Normal:
+                this.cursor = new_pos
+                break
+            case Mode.Visual:
+                const start = Math.min(this.cursor, new_pos)
+                const end = Math.max(this.cursor, new_pos)
+                this.selection = [start, end + 1]
+        }
+    }
 
     // for when escape is given as input
     reset() {
         this.cmd_buffer = ''
         this.mode = Mode.Normal
         this.cmdline_text = this.mode
+        if (this.is_appending) this.cursor--
+        this.is_appending = false
     }
 
     sync_textarea() {
