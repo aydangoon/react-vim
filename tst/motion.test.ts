@@ -262,6 +262,8 @@ describe('j', () => {
     })
     test('blank line', () => {
         expect(motion.j('\n\nabc', 1)).toBe(2)
+        expect(motion.j('ab\n\nde', 1)).toBe(3)
+        expect(motion.j('ab\n\ncd', 3, 1)).toBe(5)
     })
     test('one line', () => {
         expect(motion.j('abc', 2)).toBe(2)

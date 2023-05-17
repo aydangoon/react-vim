@@ -154,9 +154,11 @@ export const j = (text: string, pos: number, desired_col?: number): number => {
     const next_line_start = text.indexOf('\n', pos) + 1
     if (next_line_start === 0 || next_line_start === text.length) return pos
     const col = desired_col ?? pos - line_start
-    let next_line_end = text.indexOf('\n', next_line_start) - 1 // exclude newline
-    next_line_end = next_line_end < 0 ? text.length - 1 : next_line_end
-    return Math.min(next_line_start + col, next_line_end)
+    let next_line_end = text.indexOf('\n', next_line_start)
+    next_line_end = next_line_end === -1 ? text.length : next_line_end
+    return next_line_start === next_line_end
+        ? next_line_end
+        : Math.min(next_line_start + col, next_line_end - 1)
 }
 
 export const zero = (text: string, pos: number) => text.lastIndexOf('\n', pos - 1) + 1

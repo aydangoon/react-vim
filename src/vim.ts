@@ -19,6 +19,7 @@ class Vim {
     cmdline_text: string = Mode.Normal
     cmdline: HTMLInputElement | null = null
     cursor: number = 0
+    desired_col: number = 0
     selection: [number, number] = [0, 0]
     // the command being built, e.g. 'd3w'.
     cmd_buffer: string = ''
@@ -54,11 +55,17 @@ class Vim {
 
     execute_command(cmd: Command) {
         const { count, type, options } = cmd
+        const col = get_column(this.text, this.cursor)
         // motion
         if (MOTION_TYPES.includes(<any>type)) {
             const motion_type = <MotionType>type
-            const col = get_column(this.text, this.cursor)
-            const new_pos = move({ count, type: motion_type, options }, this.text, this.cursor, col)
+            const desired_col = this.desired_col > col ? this.desired_col : col
+            const new_pos = move(
+                { count, type: motion_type, options },
+                this.text,
+                this.cursor,
+                desired_col
+            )
             switch (this.mode) {
                 case Mode.Normal:
                     this.cursor = new_pos
@@ -75,6 +82,10 @@ class Vim {
         }
 
         // TODO: update state and elements wrt the command
+
+        // update desired_col
+        const new_col = get_column(this.text, this.cursor)
+        if (cmd.type !== 'j' && cmd.type !== 'k') this.desired_col = new_col
     }
 }
 

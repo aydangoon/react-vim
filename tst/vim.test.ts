@@ -31,4 +31,12 @@ describe('Vim motion commands', () => {
         v.execute_command(down)
         expect(v.cursor).toEqual(7)
     })
+    test('normal mode blank line', () => {
+        const v = make_vim('ab\n\ncd')
+        v.execute_command(right)
+        v.execute_command(down)
+        expect(v.cursor).toEqual(3)
+        v.execute_command(down)
+        expect(v.cursor).toEqual(5)
+    })
 })
