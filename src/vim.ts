@@ -3,9 +3,8 @@
  * @module
  */
 
-import { MODE_COMMAND_TYPES, Mode, ModeCommandType, switch_mode } from './mode'
-import { Command, parse_command } from './command'
-import { MOTION_TYPES, Motion, MotionType, get_column, move } from './motion'
+import { Mode, Command, parse_command } from './command'
+import { MOTION_TYPES, MotionType, get_column, move } from './motion'
 import { key_event_key_to_char } from './utils'
 
 /**
@@ -130,10 +129,37 @@ class Vim {
                     const end = Math.max(this.cursor, new_pos)
                     this.selection = [start, end + 1]
             }
-        }
-        // mode command
-        if (MODE_COMMAND_TYPES.includes(<any>type)) {
-            this.mode = switch_mode(this.mode, type as ModeCommandType)
+            // all other commands
+        } else {
+            // prettier-ignore
+            switch (type) {
+                case 'a':  this.a(cmd); break
+                case 'A':  this.A(cmd); break
+                case 'i':  this.i(cmd); break
+                case 'I':  this.I(cmd); break
+                case 'o':  this.o(cmd); break
+                case 'O':  this.O(cmd); break
+                case 'd':  this.d(cmd); break
+                case 'dd': this.dd(cmd); break
+                case 'D':  this.D(cmd); break
+                case 'x':  this.x(cmd); break
+                case 'X':  this.X(cmd); break
+                case 'J':  this.J(cmd); break
+                case 'y':  this.y(cmd); break
+                case 'yy': this.yy(cmd); break
+                case 'Y':  this.Y(cmd); break
+                case 'p':  this.p(cmd); break
+                case 'P':  this.P(cmd); break
+                case 'r':  this.r(cmd); break
+                case 'R':  this.R(cmd); break
+                case 'c':  this.c(cmd); break
+                case 'cc': this.cc(cmd); break
+                case '~':  this.tilde(cmd); break
+                case 'u':  this.u(cmd); break
+                case 'U':  this.U(cmd); break
+                case 'v':  this.v(cmd); break
+                case 'V':  this.V(cmd); break
+            }
         }
 
         // TODO: update state and elements wrt the command
@@ -143,6 +169,45 @@ class Vim {
         if (cmd.type !== 'j' && cmd.type !== 'k') this.desired_col = new_col
         this.sync_textarea()
     }
+
+    a(cmd: Command) {}
+    A(cmd: Command) {}
+    i(cmd: Command) {
+        this.mode = Mode.Insert
+    }
+    I(cmd: Command) {}
+    o(cmd: Command) {}
+    O(cmd: Command) {}
+    d(cmd: Command) {}
+    dd(cmd: Command) {}
+    D(cmd: Command) {}
+    x(cmd: Command) {}
+    X(cmd: Command) {}
+    J(cmd: Command) {}
+    y(cmd: Command) {}
+    yy(cmd: Command) {}
+    Y(cmd: Command) {}
+    p(cmd: Command) {}
+    P(cmd: Command) {}
+    r(cmd: Command) {}
+    R(cmd: Command) {
+        this.mode = Mode.Replace
+    }
+    c(cmd: Command) {}
+    cc(cmd: Command) {}
+    tilde(cmd: Command) {}
+    u(cmd: Command) {}
+    U(cmd: Command) {}
+    v(cmd: Command) {
+        if (this.mode === Mode.Visual) {
+            this.mode = Mode.Normal
+            this.selection = [this.cursor, this.cursor]
+        } else {
+            this.mode = Mode.Visual
+            this.selection = [this.cursor, this.cursor + 1]
+        }
+    }
+    V(cmd: Command) {}
 
     // for when escape is given as input
     reset() {

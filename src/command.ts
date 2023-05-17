@@ -1,8 +1,23 @@
 import { MotionType, RGX_motion } from './motion'
-import { ModeCommandType, RGX_mode_command_type } from './mode'
+
+export enum Mode {
+    Normal = '-- NORMAL --',
+    Insert = '-- INSERT --',
+    Visual = '-- VISUAL --',
+    VisualLine = '-- VISUAL LINE --',
+    VisualBlock = '-- VISUAL BLOCK --',
+    Replace = '-- REPLACE --',
+    CommandLine = '-- COMMAND LINE --',
+}
 
 type CommandOptions = { [key: string]: any }
-export type CommandType = MotionType | ModeCommandType
+export type CommandType =
+    | MotionType
+    | InsertCommandType
+    | DeleteCommandType
+    | CopyAndMoveCommandType
+    | ChangeCommandType
+    | VisualCommandType
 export interface Command {
     count?: number
     type: CommandType
@@ -10,9 +25,38 @@ export interface Command {
 }
 
 const RGX_count = /[1-9][0-9]*/
+export const INSERT_COMMAND_TYPES = ['a', 'A', 'i', 'I', 'o', 'O'] as const
+export type InsertCommandType = (typeof INSERT_COMMAND_TYPES)[number]
+export const RGX_insert_command_type = new RegExp(INSERT_COMMAND_TYPES.join('|'))
 
-const RGX_command_type = new RegExp(RGX_motion.source + '|' + RGX_mode_command_type.source)
+export const DELETE_COMMAND_TYPES = ['d', 'dd', 'D', 'x', 'X', 'J'] as const
+export type DeleteCommandType = (typeof DELETE_COMMAND_TYPES)[number]
+export const RGX_delete_command_type = /dd?|D|x|X|J/
 
+export const COPY_AND_MOVE_COMMAND_TYPES = ['y', 'yy', 'Y', 'p', 'P'] as const
+export type CopyAndMoveCommandType = (typeof COPY_AND_MOVE_COMMAND_TYPES)[number]
+export const RGX_copy_and_move_command_type = /yy?|Y|p|P/
+
+export const CHANGE_COMMAND_TYPES = ['r', 'R', 'c', 'cc', '~', 'u', 'U'] as const
+export type ChangeCommandType = (typeof CHANGE_COMMAND_TYPES)[number]
+export const RGX_change_command_type = /r|R|cc?|~|u|U/
+
+export const VISUAL_COMMAND_TYPES = ['v', 'V'] as const
+export type VisualCommandType = (typeof VISUAL_COMMAND_TYPES)[number]
+export const RGX_visual_command_type = /v|V/
+
+const command_type_rgxs = [
+    RGX_motion.source,
+    RGX_insert_command_type.source,
+    RGX_delete_command_type.source,
+    RGX_copy_and_move_command_type.source,
+    RGX_change_command_type.source,
+    RGX_visual_command_type.source,
+]
+const RGX_command_type = new RegExp(command_type_rgxs.join('|'))
+
+// todo this parsing needs to be separated from the command types,
+// i.e. ciw vs c in visual mode
 export const parse_command = (s: string): Command | null => {
     let count = 1
     let type: CommandType | undefined

@@ -1,6 +1,5 @@
-import exp from 'constants'
-import { Mode } from '../src/mode'
 import { MotionType } from '../src/motion'
+import { Mode } from '../src/command'
 import Vim from '../src/vim'
 
 const make_vim = (t) => new Vim(t)
