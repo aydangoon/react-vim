@@ -155,10 +155,11 @@ class Vim {
     }
     i(cmd: Command) {
         this.mode = Mode.Insert
+        this.is_appending = this.text === '' || this.cursor === this.text.length
     }
     I(cmd: Command) {
         this.move({ type: '^' })
-        this.mode = Mode.Insert
+        this.i(cmd)
     }
     o(cmd: Command) {
         let next_newline = this.text.indexOf('\n', this.cursor)
@@ -185,11 +186,33 @@ class Vim {
         this.mode = Mode.Insert
     }
     d(cmd: Command) {}
-    dd(cmd: Command) {}
-    D(cmd: Command) {}
-    x(cmd: Command) {}
-    X(cmd: Command) {}
-    J(cmd: Command) {}
+    dd(cmd: Command) {
+        const start_exclusive = this.cursor === 0 ? -1 : this.text.indexOf('\n', this.cursor - 1)
+        let next_nl = this.text.indexOf('\n', this.cursor)
+        const end_excusive = next_nl === -1 ? this.text.length : next_nl + 1
+        this.text = this.text.slice(0, start_exclusive + 1) + this.text.slice(end_excusive)
+    }
+    D(cmd: Command) {
+        let next_nl = this.text.indexOf('\n', this.cursor)
+        const end_excusive = next_nl === -1 ? this.text.length : next_nl
+
+        this.text = this.text.slice(0, this.cursor) + this.text.slice(end_excusive)
+        this.cursor -= this.cursor === 0 || this.text[this.cursor - 1] === '\n' ? 0 : 1
+    }
+    x(cmd: Command) {
+        this.text = this.text.slice(0, this.cursor) + this.text.slice(this.cursor + 1)
+    }
+    X(cmd: Command) {
+        if (this.cursor === 0) return
+        this.cursor--
+        this.x(cmd)
+    }
+    J(cmd: Command) {
+        let next_nl = this.text.indexOf('\n', this.cursor)
+        if (next_nl === -1) return
+        this.text = this.text.slice(0, next_nl) + ' ' + this.text.slice(next_nl + 1)
+        this.cursor = next_nl
+    }
     y(cmd: Command) {}
     yy(cmd: Command) {}
     Y(cmd: Command) {}
