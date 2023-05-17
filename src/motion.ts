@@ -219,27 +219,27 @@ export const move = (m: Motion, text: string, pos: number, desired_col?: number)
         pos = (() => {
             // prettier-ignore
             switch (type) {
-                case 'w': return w(text, pos)
-                case 'W': return W(text, pos)
-                case 'e': return e(text, pos)
-                case 'E': return E(text, pos)
-                case 'b': return b(text, pos)
-                case 'B': return B(text, pos)
+                case 'w':  return w(text, pos)
+                case 'W':  return W(text, pos)
+                case 'e':  return e(text, pos)
+                case 'E':  return E(text, pos)
+                case 'b':  return b(text, pos)
+                case 'B':  return B(text, pos)
                 case 'ge': return ge(text, pos)
                 case 'gE': return gE(text, pos)
-                case 'h': return h(text, pos)
-                case 'l': return l(text, pos)
-                case 'k': return k(text, pos, col)
-                case 'j': return j(text, pos, col)
-                case '0': return zero(text, pos)
-                case '^': return caret(text, pos)
-                case '$': return $(text, pos, { count, in_visual_mode: m.options?.in_visual_mode})
+                case 'h':  return h(text, pos)
+                case 'l':  return l(text, pos)
+                case 'k':  return k(text, pos, col)
+                case 'j':  return j(text, pos, col)
+                case '0':  return zero(text, pos)
+                case '^':  return caret(text, pos)
+                case '$':  return $(text, pos, { count, in_visual_mode: m.options?.in_visual_mode})
                 case 'g_': return g_(text, pos, count)
-                default: return pos
+                default:   return pos
             }
         })()
         // stop for motions that don't repeat <count> times or
-        // if a motion command returns its starting position
+        // if next position is the same as the previous
         if (type === '$' || type === 'g_' || prev_pos === pos) break
     }
     return pos
