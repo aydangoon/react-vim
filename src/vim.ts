@@ -6,6 +6,7 @@
 import { MODE_COMMAND_TYPES, Mode, ModeCommandType, switch_mode } from './mode'
 import { Command, parse_command } from './command'
 import { MOTION_TYPES, Motion, MotionType, get_column, move } from './motion'
+import { key_event_key_to_char } from './utils'
 
 /**
  * The Vim state. Constructed with a textarea and input elements or a string. If constructed with
@@ -36,6 +37,59 @@ class Vim {
         }
     }
 
+    input(key: string) {
+        if (key === 'Escape') {
+            this.reset()
+            return
+        }
+
+        switch (this.mode) {
+            case Mode.Normal:
+            case Mode.Visual:
+                this.push_to_cmd_buffer(key)
+                break
+            case Mode.Insert:
+                this.insert_input(key)
+                break
+            case Mode.Replace:
+                //this.handle_input_replace(key)
+                break
+            case Mode.CommandLine:
+                this.command_line_input(key)
+                break
+        }
+    }
+
+    insert_input(key: string) {
+        if (key === 'Backspace' && this.cursor > 0) {
+            this.text = this.text.slice(0, this.cursor - 1) + this.text.slice(this.cursor)
+            this.cursor--
+        } else if (key !== 'Backspace') {
+            this.text =
+                this.text.slice(0, this.cursor) +
+                key_event_key_to_char(key) +
+                this.text.slice(this.cursor)
+            this.cursor++
+        }
+        this.sync_textarea()
+    }
+
+    command_line_input(key: string) {
+        if (key === 'Enter') {
+            this.execute_command_line()
+        } else if (key === 'Backspace') {
+            this.cmdline_text = this.cmdline_text.slice(0, this.cmdline_text.length - 1)
+        } else {
+            this.cmdline_text += key
+        }
+        this.sync_cmdline()
+    }
+
+    execute_command_line() {
+        // TODO: implement
+        this.cmdline_text = ''
+    }
+
     push_to_cmd_buffer(char: string) {
         this.cmd_buffer += char
         const cmd = parse_command(this.cmd_buffer)
@@ -56,10 +110,11 @@ class Vim {
     execute_command(cmd: Command) {
         const { count, type, options } = cmd
         const col = get_column(this.text, this.cursor)
-        // motion
+        // motion command
         if (MOTION_TYPES.includes(<any>type)) {
             const motion_type = <MotionType>type
             const desired_col = this.desired_col > col ? this.desired_col : col
+            //console.log('cmd', cmd)
             const new_pos = move(
                 { count, type: motion_type, options },
                 this.text,
@@ -86,6 +141,29 @@ class Vim {
         // update desired_col
         const new_col = get_column(this.text, this.cursor)
         if (cmd.type !== 'j' && cmd.type !== 'k') this.desired_col = new_col
+        this.sync_textarea()
+    }
+
+    // for when escape is given as input
+    reset() {
+        this.cmd_buffer = ''
+        this.mode = Mode.Normal
+        this.cmdline_text = this.mode
+    }
+
+    sync_textarea() {
+        if (!this.textarea) return
+        this.textarea.value = this.text
+        if (this.mode === Mode.Visual) {
+            this.textarea.setSelectionRange(this.selection[0], this.selection[1])
+        } else {
+            this.textarea.setSelectionRange(this.cursor, this.cursor)
+        }
+    }
+
+    sync_cmdline() {
+        if (!this.cmdline) return
+        this.cmdline.value = this.cmdline_text
     }
 }
 

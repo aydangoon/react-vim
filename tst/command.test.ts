@@ -12,6 +12,7 @@ describe('parse_command', () => {
         expect(parse_command('4gE')).toEqual({ count: 4, type: 'gE' })
         expect(parse_command('h')).toEqual({ count: 1, type: 'h' })
         expect(parse_command('l')).toEqual({ count: 1, type: 'l' })
+        expect(parse_command('5l')).toEqual({ count: 5, type: 'l' })
         expect(parse_command('k')).toEqual({ count: 1, type: 'k' })
         expect(parse_command('j')).toEqual({ count: 1, type: 'j' })
         expect(parse_command('0')).toEqual({ count: 1, type: '0' })

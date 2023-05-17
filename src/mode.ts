@@ -21,5 +21,7 @@ export const switch_mode = (curr: Mode, cmd: ModeCommandType): Mode => {
             return curr === Mode.Visual ? Mode.Normal : Mode.Visual
         case 'R':
             return Mode.Replace
+        default:
+            return Mode.Normal
     }
 }

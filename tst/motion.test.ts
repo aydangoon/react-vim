@@ -357,4 +357,7 @@ describe('move', () => {
         expect(motion.move({ type: 'j', count: 4 }, 'abc\nd\ne', 2)).toBe(6)
         expect(motion.move({ type: 'j', count: 2 }, 'abc\nd\nefg', 2)).toBe(8)
     })
+    test('l multiple motions', () => {
+        expect(motion.move({ type: 'l', count: 5 }, 'abc\ndef', 0)).toBe(2)
+    })
 })
