@@ -17,11 +17,18 @@ describe('parse_command', () => {
         expect(parse_command('j')).toEqual({ count: 1, type: 'j' })
         expect(parse_command('0')).toEqual({ count: 1, type: '0' })
         expect(parse_command('^')).toEqual({ count: 1, type: '^' })
-        expect(parse_command('100$')).toEqual({ count: 100, type: '$' })
+        expect(parse_command('100$')).toEqual({
+            count: 100,
+            type: '$',
+            options: {
+                in_visual_mode: false,
+            },
+        })
         expect(parse_command('301g_')).toEqual({ count: 301, type: 'g_' })
     })
     test('invalid motions', () => {
         expect(parse_command('10')).toBeNull()
+        expect(parse_command('r')).toBeNull()
     })
 
     test('valid mode commands', () => {
@@ -29,5 +36,6 @@ describe('parse_command', () => {
         expect(parse_command('v')).toEqual({ count: 1, type: 'v' })
         expect(parse_command('R')).toEqual({ count: 1, type: 'R' })
         expect(parse_command('3v')).toEqual({ count: 3, type: 'v' })
+        expect(parse_command('rd')).toEqual({ count: 1, type: 'r', options: { char: 'd' } })
     })
 })

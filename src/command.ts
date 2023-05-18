@@ -7,7 +7,6 @@ export enum Mode {
     VisualLine = '-- VISUAL LINE --',
     VisualBlock = '-- VISUAL BLOCK --',
     Replace = '-- REPLACE --',
-    SingleReplace = ' -- SINGLE REPLACE --',
     CommandLine = '-- COMMAND LINE --',
 }
 
@@ -58,10 +57,10 @@ const RGX_command_type = new RegExp(command_type_rgxs.join('|'))
 
 // todo this parsing needs to be separated from the command types,
 // i.e. ciw vs c in visual mode
-export const parse_command = (s: string): Command | null => {
+export const parse_command = (s: string, mode: Mode = Mode.Normal): Command | null => {
     let count = 1
     let type: CommandType | undefined
-    let options: CommandOptions | undefined
+    let options: CommandOptions = {}
 
     // parse count
     const count_match = RGX_count.exec(s)
@@ -70,12 +69,29 @@ export const parse_command = (s: string): Command | null => {
         s = s.substring(count_match[0].length)
     }
 
-    // parse type
+    // match command type
     const type_match = RGX_command_type.exec(s)
     if (!type_match || type_match.index !== 0) return null
-
     type = type_match[0] as CommandType
     s = s.substring(type_match[0].length)
 
-    if (type_match) return { count, type, options }
+    // command type specific parsing, prettier-ignore
+    switch (type) {
+        case 'y':
+        case 'c':
+        case 'd':
+            if (mode === Mode.Visual) break
+            options['motion'] = parse_command(s, mode)
+            if (!options['motion']) return null
+            break
+        case 'r':
+            if (s.length !== 1) return null
+            options['char'] = s
+            break
+        case '$':
+            options['in_visual_mode'] = mode === Mode.Visual
+            break
+    }
+
+    return { count, type, options: Object.keys(options).length > 0 ? options : undefined }
 }

@@ -40,23 +40,9 @@ class Vim {
             this.reset()
             return
         }
-
         switch (this.mode) {
             case Mode.Insert:
                 this.insert_input(key)
-                break
-            case Mode.SingleReplace:
-                if (
-                    this.text.length !== 0 &&
-                    this.cursor !== this.text.length &&
-                    this.text[this.cursor] !== '\n'
-                ) {
-                    this.text =
-                        this.text.slice(0, this.cursor) +
-                        key_event_key_to_char(key) +
-                        this.text.slice(this.cursor + 1)
-                }
-                this.mode = Mode.Normal
                 break
             case Mode.Replace:
                 //this.handle_input_replace(key)
@@ -103,16 +89,6 @@ class Vim {
         this.cmd_buffer += char
         const cmd = parse_command(this.cmd_buffer)
         if (!cmd) return
-
-        // attach additional appropriate command-based options derived from
-        // the current state
-        // TODO: probably delete this?
-        switch (cmd.type) {
-            case '$':
-                cmd.options['in_visual_mode'] = this.mode === Mode.Visual
-                break
-        }
-
         this.cmd_buffer = ''
         this.execute_command(cmd)
     }
@@ -230,7 +206,13 @@ class Vim {
     p(cmd: Command) {}
     P(cmd: Command) {}
     r(cmd: Command) {
-        this.mode = Mode.SingleReplace
+        if (this.text.length === 0 || this.cursor === this.text.length) return
+        if (this.text[this.cursor] === '\n') return
+
+        this.text =
+            this.text.slice(0, this.cursor) +
+            key_event_key_to_char(cmd.options['char']) +
+            this.text.slice(this.cursor + 1)
     }
     R(cmd: Command) {
         this.mode = Mode.Replace
