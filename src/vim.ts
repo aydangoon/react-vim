@@ -87,7 +87,7 @@ class Vim {
 
     push_to_cmd_buffer(char: string) {
         this.cmd_buffer += char
-        const cmd = parse_command(this.cmd_buffer)
+        const cmd = parse_command(this.cmd_buffer, this.mode)
         if (!cmd) return
         this.cmd_buffer = ''
         this.execute_command(cmd)
@@ -176,7 +176,10 @@ class Vim {
         if (this.mode === Mode.Visual) {
             this.text = string_delete(this.text, this.cursor, this.visual_start)
             this.mode = Mode.Normal
-            this.cursor = this.visual_start < this.cursor ? this.visual_start : this.cursor
+            this.cursor = Math.min(
+                this.visual_start < this.cursor ? this.visual_start : this.cursor,
+                this.text.length - 1
+            )
         } else {
             const motion = cmd.options?.motion
             if (!motion) throw new Error('d: Motion required')
