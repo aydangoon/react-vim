@@ -4,8 +4,8 @@
  */
 
 import { Mode, Command, parse_command } from './command'
-import { MOTION_TYPES, MotionType, W, get_column, move as motion_move } from './motion'
-import { key_event_key_to_char } from './utils'
+import { MotionType, get_column, is_exclusive, move as motion_move } from './motion'
+import { key_event_key_to_char, string_delete } from './utils'
 
 /**
  * The Vim state. Constructed with a textarea and input elements or a string. If constructed with
@@ -19,7 +19,7 @@ class Vim {
     cmdline: HTMLInputElement | null = null
     cursor: number = 0
     desired_col: number = 0
-    selection: [number, number] = [0, 0]
+    visual_start: number = 0
     cmd_buffer: string = '' // the command being built, e.g. 'd3w'.
     is_appending: boolean = false // was last command an append?
 
@@ -172,7 +172,21 @@ class Vim {
         this.is_appending = true
         this.mode = Mode.Insert
     }
-    d(cmd: Command) {}
+    d(cmd: Command) {
+        if (this.mode === Mode.Visual) {
+            this.text = string_delete(this.text, this.cursor, this.visual_start)
+            this.mode = Mode.Normal
+            this.cursor = this.visual_start < this.cursor ? this.visual_start : this.cursor
+        } else {
+            const motion = cmd.options?.motion
+            if (!motion) throw new Error('d: Motion required')
+            const new_pos = motion_move(motion, this.text, this.cursor, this.desired_col)
+            const exclusive = is_exclusive(motion.type)
+            this.text = string_delete(this.text, this.cursor, new_pos - (exclusive ? 1 : 0))
+            // TODO: cursor position? i can't find in the docs how this works,
+            // but its probably something to do with linewise vs charwise motions
+        }
+    }
     dd(cmd: Command) {
         const start_exclusive = this.cursor === 0 ? -1 : this.text.indexOf('\n', this.cursor - 1)
         let next_nl = this.text.indexOf('\n', this.cursor)
@@ -223,13 +237,8 @@ class Vim {
     u(cmd: Command) {}
     U(cmd: Command) {}
     v(cmd: Command) {
-        if (this.mode === Mode.Visual) {
-            this.mode = Mode.Normal
-            this.selection = [this.cursor, this.cursor]
-        } else {
-            this.mode = Mode.Visual
-            this.selection = [this.cursor, this.cursor + 1]
-        }
+        this.mode = this.mode === Mode.Visual ? Mode.Normal : Mode.Visual
+        this.visual_start = this.cursor
     }
     V(cmd: Command) {}
     move({ type, count, options }: Command) {
@@ -248,9 +257,8 @@ class Vim {
                 this.cursor = new_pos
                 break
             case Mode.Visual:
-                const start = Math.min(this.cursor, new_pos)
-                const end = Math.max(this.cursor, new_pos)
-                this.selection = [start, end + 1]
+                this.visual_start = new_pos
+                break
         }
     }
 
@@ -267,7 +275,11 @@ class Vim {
         if (!this.textarea) return
         this.textarea.value = this.text
         if (this.mode === Mode.Visual) {
-            this.textarea.setSelectionRange(this.selection[0], this.selection[1])
+            if (this.visual_start <= this.cursor) {
+                this.textarea.setSelectionRange(this.visual_start, this.cursor + 1)
+            } else {
+                this.textarea.setSelectionRange(this.cursor, this.visual_start + 1)
+            }
         } else {
             this.textarea.setSelectionRange(this.cursor, this.cursor)
         }

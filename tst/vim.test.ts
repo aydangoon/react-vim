@@ -223,6 +223,30 @@ const input_string = (v: Vim, s: string) => {
     }
 }
 
+describe('visual mode', () => {
+    test('basic', () => {
+        const v = make_vim('abc def')
+        v.input('v')
+        expect(v.mode).toEqual(Mode.Visual)
+        expect(v.visual_start).toEqual(0)
+        v.input('l')
+        expect(v.visual_start).toEqual(1)
+        v.input('h')
+        expect(v.visual_start).toEqual(0)
+        v.input('h')
+        expect(v.visual_start).toEqual(0)
+        v.input('v')
+        expect(v.mode).toEqual(Mode.Normal)
+        v.input('l')
+        v.input('v')
+        expect(v.mode).toEqual(Mode.Visual)
+        expect(v.visual_start).toEqual(1)
+        v.input('h')
+        expect(v.visual_start).toEqual(0)
+        expect(v.cursor).toEqual(1)
+    })
+})
+
 describe('insert mode', () => {
     test('basic insert', () => {
         const v = make_vim('world')

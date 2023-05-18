@@ -244,3 +244,24 @@ export const move = (m: Motion, text: string, pos: number, desired_col?: number)
     }
     return pos
 }
+
+export const is_exclusive = (t: MotionType) => {
+    // prettier-ignore
+    switch (t) {
+        case 'w':
+        case 'W':
+        case 'h':
+        case 'l':
+        case '0':
+        case '^':
+        case 'k':
+        case 'j':
+        case 'w':
+        case 'W':
+        case 'b':
+        case 'B':
+            return true
+        default: 
+            return false
+    }
+}
