@@ -19,7 +19,7 @@ class Vim {
     cmdline: HTMLInputElement | null = null
     cursor: number = 0
     desired_col: number = 0
-    visual_start: number = 0
+    visual_cursor: number = 0
     cmd_buffer: string = '' // the command being built, e.g. 'd3w'.
     is_appending: boolean = false // was last command an append?
 
@@ -174,10 +174,10 @@ class Vim {
     }
     d(cmd: Command) {
         if (this.mode === Mode.Visual) {
-            this.text = string_delete(this.text, this.cursor, this.visual_start)
+            this.text = string_delete(this.text, this.cursor, this.visual_cursor)
             this.mode = Mode.Normal
             this.cursor = Math.min(
-                this.visual_start < this.cursor ? this.visual_start : this.cursor,
+                this.visual_cursor < this.cursor ? this.visual_cursor : this.cursor,
                 this.text.length - 1
             )
         } else {
@@ -241,7 +241,7 @@ class Vim {
     U(cmd: Command) {}
     v(cmd: Command) {
         this.mode = this.mode === Mode.Visual ? Mode.Normal : Mode.Visual
-        this.visual_start = this.cursor
+        this.visual_cursor = this.cursor
     }
     V(cmd: Command) {}
     move({ type, count, options }: Command) {
@@ -260,7 +260,7 @@ class Vim {
                 this.cursor = new_pos
                 break
             case Mode.Visual:
-                this.visual_start = new_pos
+                this.visual_cursor = new_pos
                 break
         }
     }
@@ -278,10 +278,10 @@ class Vim {
         if (!this.textarea) return
         this.textarea.value = this.text
         if (this.mode === Mode.Visual) {
-            if (this.visual_start <= this.cursor) {
-                this.textarea.setSelectionRange(this.visual_start, this.cursor + 1)
+            if (this.visual_cursor <= this.cursor) {
+                this.textarea.setSelectionRange(this.visual_cursor, this.cursor + 1)
             } else {
-                this.textarea.setSelectionRange(this.cursor, this.visual_start + 1)
+                this.textarea.setSelectionRange(this.cursor, this.visual_cursor + 1)
             }
         } else {
             this.textarea.setSelectionRange(this.cursor, this.cursor)
