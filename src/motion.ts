@@ -52,6 +52,35 @@ export const RGX_motion = /w|W|e|E|b|B|(g(e|E|_)?)|h|l|k|j|0|\^|\$/
 export const get_column = (text: string, pos: number): number =>
     text[pos] === '\n' ? 0 : pos - (text.lastIndexOf('\n', pos - 1) + 1)
 
+export const get_row = (text: string, pos: number): number => {
+    const row = text.slice(0, pos).split('\n').length - 1
+    return row < 0 ? 0 : row
+}
+
+/**
+ *  returns the absolute position of the start of the row of the given position
+ */
+export const row_start = (text: string, pos: number, include_newline: boolean): number => {
+    return pos === 0 ? 0 : text.lastIndexOf('\n', pos - 1) + (include_newline ? 0 : 1)
+}
+
+// get the absolute position of the start of the nth row
+export const row_n_start = (text: string, n: number): number => {
+    let i = 0
+    while (n > 0 && i < text.length) {
+        if (text[i] === '\n') {
+            n--
+        }
+        i++
+    }
+    return i
+}
+
+export const row_end = (text: string, pos: number, include_newline: boolean): number => {
+    const next_newline = text.indexOf('\n', pos)
+    return next_newline === -1 ? text.length - 1 : next_newline - (include_newline ? 0 : 1)
+}
+
 export const next_blank = (text: string, pos: number): number => {
     if (pos === text.length - 1) return -1
     const match = RGX_blank.exec(text.slice(pos))
@@ -248,20 +277,21 @@ export const move = (m: Motion, text: string, pos: number, desired_col?: number)
 export const is_exclusive = (t: MotionType) => {
     // prettier-ignore
     switch (t) {
-        case 'w':
-        case 'W':
-        case 'h':
-        case 'l':
-        case '0':
-        case '^':
-        case 'k':
-        case 'j':
-        case 'w':
-        case 'W':
-        case 'b':
-        case 'B':
+        case 'w': case 'W': case 'h': case 'l':
+        case '0': case '^': case 'k': case 'j':
+        case 'w': case 'W': case 'b': case 'B':
             return true
         default: 
+            return false
+    }
+}
+
+export const is_linewise = (t: MotionType) => {
+    // prettier-ignore
+    switch (t) {
+        case 'k': case 'j': 
+            return true
+        default:
             return false
     }
 }

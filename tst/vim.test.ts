@@ -187,6 +187,28 @@ describe('Vim non-motion commands', () => {
         expect(v.text).toEqual('a')
         expect(v.cursor).toEqual(0)
     })
+    test('d{motion} more advanced', () => {
+        const v = make_vim('hello world')
+        v.input('d')
+        v.input('w')
+        expect(v.text).toEqual('world')
+        expect(v.cursor).toEqual(0)
+    })
+    test('d{motion} linewise', () => {
+        const v = make_vim('hello\nworld')
+        v.input('d')
+        v.input('j')
+        expect(v.text).toEqual('')
+        expect(v.cursor).toEqual(0)
+        v.text = 'abc\nhello\nworld'
+        v.input('2')
+        v.input('j')
+        expect(v.cursor).toEqual(10)
+        v.input('d')
+        v.input('k')
+        expect(v.text).toEqual('abc')
+        expect(v.cursor).toEqual(0)
+    })
     test('dd', () => {
         const v = make_vim('abc\ndef')
         v.execute_command({ type: 'dd' })

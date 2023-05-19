@@ -11,6 +11,29 @@ describe('motion.get_column', () => {
         expect(motion.get_column('\n\n', 1)).toBe(0)
     })
 })
+describe('motion.get_row', () => {
+    test('basic', () => {
+        expect(motion.get_row('abc', 0)).toBe(0)
+        expect(motion.get_row('abc\nd', 4)).toBe(1)
+        expect(motion.get_row('abc\ndef', 6)).toBe(1)
+    })
+    test('empty line', () => {
+        expect(motion.get_row('\n', 0)).toBe(0)
+        expect(motion.get_row('\n\n', 1)).toBe(1)
+    })
+})
+
+describe('motion.row_n_start', () => {
+    test('basic', () => {
+        expect(motion.row_n_start('abc', 0)).toBe(0)
+        expect(motion.row_n_start('abc\nd', 1)).toBe(4)
+        expect(motion.row_n_start('abc\ndef', 1)).toBe(4)
+    })
+    test('empty line', () => {
+        expect(motion.row_n_start('\n', 0)).toBe(0)
+        expect(motion.row_n_start('\n\n', 1)).toBe(1)
+    })
+})
 
 describe('motion.next_blank', () => {
     test('word followed by blanks', () => {

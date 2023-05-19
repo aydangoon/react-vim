@@ -4,7 +4,16 @@
  */
 
 import { Mode, Command, parse_command } from './command'
-import { MotionType, get_column, is_exclusive, move as motion_move } from './motion'
+import {
+    MotionType,
+    get_column,
+    get_row,
+    is_exclusive,
+    is_linewise,
+    move as motion_move,
+    row_end,
+    row_start,
+} from './motion'
 import { key_event_key_to_char, string_delete } from './utils'
 
 /**
@@ -184,10 +193,24 @@ class Vim {
             const motion = cmd.options?.motion
             if (!motion) throw new Error('d: Motion required')
             const new_pos = motion_move(motion, this.text, this.cursor, this.desired_col)
-            const exclusive = is_exclusive(motion.type)
-            this.text = string_delete(this.text, this.cursor, new_pos - (exclusive ? 1 : 0))
-            // TODO: cursor position? i can't find in the docs how this works,
-            // but its probably something to do with linewise vs charwise motions
+            if (is_linewise(motion.type)) {
+                const start = row_start(
+                    this.text,
+                    this.cursor < new_pos ? this.cursor : new_pos,
+                    true
+                )
+                const prev_line_start = start === 0 ? 0 : row_start(this.text, start - 1, false)
+                const end = row_end(this.text, this.cursor < new_pos ? new_pos : this.cursor, true)
+                this.text = string_delete(this.text, start, end)
+                this.cursor = prev_line_start
+            } else {
+                this.text = string_delete(
+                    this.text,
+                    this.cursor,
+                    new_pos - (is_exclusive(motion.type) ? 1 : 0)
+                )
+                this.cursor = this.cursor < new_pos ? this.cursor : new_pos
+            }
         }
     }
     dd(cmd: Command) {
