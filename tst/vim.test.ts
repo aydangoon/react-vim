@@ -260,6 +260,41 @@ describe('Vim non-motion commands', () => {
         expect(v.text).toEqual('')
         expect(v.cursor).toEqual(0)
     })
+    test('{visual}c', () => {
+        const v = make_vim('abc\ndef')
+        v.input('v')
+        v.input('e')
+        v.input('c')
+        v.input('d')
+        expect(v.text).toEqual('d\ndef')
+        expect(v.cursor).toEqual(1)
+    })
+    test('c{motion}', () => {
+        const v = make_vim('abc def')
+        v.input('c')
+        v.input('e')
+        v.input('d')
+        expect(v.text).toEqual('d def')
+        expect(v.cursor).toEqual(1)
+    })
+    test('c{motion} linewise', () => {
+        const v = make_vim('hello\nworld')
+        v.input('d')
+        v.input('j')
+        expect(v.text).toEqual('')
+        expect(v.cursor).toEqual(0)
+        expect(v.mode).toEqual(Mode.Normal)
+        v.input('Escape')
+        // TODO newline behavior differs between d{motion} and c{motion}
+        v.text = 'abc\nhello\nworld\n'
+        v.input('2')
+        v.input('j')
+        expect(v.cursor).toEqual(10)
+        v.input('c')
+        v.input('k')
+        expect(v.text).toEqual('abc\n\n')
+        expect(v.cursor).toEqual(4)
+    })
 })
 
 const input_string = (v: Vim, s: string) => {

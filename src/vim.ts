@@ -202,7 +202,7 @@ class Vim {
                 const prev_line_start = start === 0 ? 0 : row_start(this.text, start - 1, false)
                 const end = row_end(this.text, this.cursor < new_pos ? new_pos : this.cursor, true)
                 this.text = string_delete(this.text, start, end)
-                this.cursor = prev_line_start
+                this.cursor = this.text.length - 1 < start ? prev_line_start : start
             } else {
                 this.text = string_delete(
                     this.text,
@@ -218,6 +218,7 @@ class Vim {
         let next_nl = this.text.indexOf('\n', this.cursor)
         const end_excusive = next_nl === -1 ? this.text.length : next_nl + 1
         this.text = this.text.slice(0, start_exclusive + 1) + this.text.slice(end_excusive)
+        // TODO: update logic and set cursor position
     }
     D(cmd: Command) {
         let next_nl = this.text.indexOf('\n', this.cursor)
@@ -257,7 +258,38 @@ class Vim {
     R(cmd: Command) {
         this.mode = Mode.Replace
     }
-    c(cmd: Command) {}
+    c(cmd: Command) {
+        if (this.mode === Mode.Visual) {
+            this.text = string_delete(this.text, this.cursor, this.visual_cursor)
+            this.cursor = Math.min(
+                this.visual_cursor < this.cursor ? this.visual_cursor : this.cursor,
+                this.text.length - 1
+            )
+        } else {
+            const motion = cmd.options?.motion
+            if (!motion) throw new Error('c: Motion required')
+            const new_pos = motion_move(motion, this.text, this.cursor, this.desired_col)
+            if (is_linewise(motion.type)) {
+                const start = row_start(
+                    this.text,
+                    this.cursor < new_pos ? this.cursor : new_pos,
+                    false
+                )
+                const prev_line_start = start === 0 ? 0 : row_start(this.text, start - 1, false)
+                const end = row_end(this.text, this.cursor < new_pos ? new_pos : this.cursor, false)
+                this.text = string_delete(this.text, start, end)
+                this.cursor = this.text.length - 1 < start ? prev_line_start : start
+            } else {
+                this.text = string_delete(
+                    this.text,
+                    this.cursor,
+                    new_pos - (is_exclusive(motion.type) ? 1 : 0)
+                )
+                this.cursor = this.cursor < new_pos ? this.cursor : new_pos
+            }
+        }
+        this.mode = Mode.Insert
+    }
     cc(cmd: Command) {}
     tilde(cmd: Command) {}
     u(cmd: Command) {}

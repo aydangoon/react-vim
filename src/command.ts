@@ -55,7 +55,7 @@ const command_type_rgxs = [
 ]
 const RGX_command_type = new RegExp(command_type_rgxs.join('|'))
 
-// todo this parsing needs to be separated from the command types,
+// TODO: this parsing needs to be separated from the command types,
 // i.e. ciw vs c in visual mode
 export const parse_command = (s: string, mode: Mode = Mode.Normal): Command | null => {
     let count = 1
