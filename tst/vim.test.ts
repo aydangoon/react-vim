@@ -295,6 +295,23 @@ describe('Vim non-motion commands', () => {
         expect(v.text).toEqual('abc\n\n')
         expect(v.cursor).toEqual(4)
     })
+    test('C', () => {
+        const v = make_vim('hello\n')
+        v.input('l')
+        v.input('C')
+        expect(v.text).toEqual('h\n')
+        expect(v.cursor).toEqual(1)
+        expect(v.mode).toEqual(Mode.Insert)
+        v.input('i')
+        expect(v.text).toEqual('hi\n')
+        expect(v.cursor).toEqual(2)
+        v.input('Escape')
+        expect(v.cursor).toEqual(1)
+        v.input('i')
+        v.input('_')
+        expect(v.text).toEqual('h_i\n')
+        expect(v.cursor).toEqual(2)
+    })
 })
 
 const input_string = (v: Vim, s: string) => {

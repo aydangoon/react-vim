@@ -37,9 +37,9 @@ export const COPY_AND_MOVE_COMMAND_TYPES = ['y', 'yy', 'Y', 'p', 'P'] as const
 export type CopyAndMoveCommandType = (typeof COPY_AND_MOVE_COMMAND_TYPES)[number]
 export const RGX_copy_and_move_command_type = /yy?|Y|p|P/
 
-export const CHANGE_COMMAND_TYPES = ['r', 'R', 'c', 'cc', '~', 'u', 'U'] as const
+export const CHANGE_COMMAND_TYPES = ['r', 'R', 'c', 'cc', 'C', '~', 'u'] as const
 export type ChangeCommandType = (typeof CHANGE_COMMAND_TYPES)[number]
-export const RGX_change_command_type = /r|R|cc?|~|u|U/
+export const RGX_change_command_type = /r|R|cc?|C|~|u/
 
 export const VISUAL_COMMAND_TYPES = ['v', 'V'] as const
 export type VisualCommandType = (typeof VISUAL_COMMAND_TYPES)[number]

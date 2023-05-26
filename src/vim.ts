@@ -126,9 +126,9 @@ class Vim {
                 case 'R':  this.R(cmd); break
                 case 'c':  this.c(cmd); break
                 case 'cc': this.cc(cmd); break
+                case 'C':  this.C(cmd); break
                 case '~':  this.tilde(cmd); break
                 case 'u':  this.u(cmd); break
-                case 'U':  this.U(cmd); break
                 case 'v':  this.v(cmd); break
                 case 'V':  this.V(cmd); break
                 default:   this.move(cmd); break
@@ -210,6 +210,7 @@ class Vim {
                     new_pos - (is_exclusive(motion.type) ? 1 : 0)
                 )
                 this.cursor = this.cursor < new_pos ? this.cursor : new_pos
+                if (this.cursor !== 0 && this.text[this.cursor] === '\n') this.cursor--
             }
         }
     }
@@ -221,14 +222,11 @@ class Vim {
         // TODO: update logic and set cursor position
     }
     D(cmd: Command) {
-        let next_nl = this.text.indexOf('\n', this.cursor)
-        const end_excusive = next_nl === -1 ? this.text.length : next_nl
-
-        this.text = this.text.slice(0, this.cursor) + this.text.slice(end_excusive)
-        this.cursor -= this.cursor === 0 || this.text[this.cursor - 1] === '\n' ? 0 : 1
+        this.d({ type: 'd', options: { motion: { type: '$' } } })
     }
     x(cmd: Command) {
         this.text = this.text.slice(0, this.cursor) + this.text.slice(this.cursor + 1)
+        if (this.cursor !== 0 && this.text[this.cursor] === '\n') this.cursor--
     }
     X(cmd: Command) {
         if (this.cursor === 0) return
@@ -290,10 +288,16 @@ class Vim {
         }
         this.mode = Mode.Insert
     }
-    cc(cmd: Command) {}
+    C(cmd: Command) {
+        this.c({ type: 'c', options: { motion: { type: '$' } } })
+        this.is_appending = true
+    }
+    cc(cmd: Command) {
+        this.move({ type: '^' })
+        this.C(cmd)
+    }
     tilde(cmd: Command) {}
     u(cmd: Command) {}
-    U(cmd: Command) {}
     v(cmd: Command) {
         this.mode = this.mode === Mode.Visual ? Mode.Normal : Mode.Visual
         this.visual_cursor = this.cursor
