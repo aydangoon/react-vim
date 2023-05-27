@@ -29,6 +29,7 @@ class Vim {
     cursor: number = 0
     desired_col: number = 0
     visual_cursor: number = 0
+    visual_line_range: [number, number] = [0, 0]
     cmd_buffer: string = '' // the command being built, e.g. 'd3w'.
     is_appending: boolean = false // was last command an append?
 
@@ -182,7 +183,19 @@ class Vim {
         this.mode = Mode.Insert
     }
     d(cmd: Command) {
-        if (this.mode === Mode.Visual) {
+        if (this.mode === Mode.VisualLine) {
+            this.text = string_delete(
+                this.text,
+                this.visual_line_range[0],
+                this.visual_line_range[1]
+            )
+            this.mode = Mode.Normal
+            // cursor tries to stay on visual line range start otherwise goes to start of previous line
+            this.cursor =
+                this.visual_line_range[0] < this.text.length - 1
+                    ? this.visual_line_range[0]
+                    : row_start(this.text, this.visual_line_range[0] - 1, false)
+        } else if (this.mode === Mode.Visual) {
             this.text = string_delete(this.text, this.cursor, this.visual_cursor)
             this.mode = Mode.Normal
             this.cursor = Math.min(
@@ -296,13 +309,29 @@ class Vim {
         this.move({ type: '^' })
         this.C(cmd)
     }
-    tilde(cmd: Command) {}
+    tilde(cmd: Command) {
+        // TODO: implement
+        if (this.mode === Mode.Normal) {
+            const c = this.text[this.cursor]
+            const new_c = c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()
+            this.text = this.text.slice(0, this.cursor) + new_c + this.text.slice(this.cursor + 1)
+        } else {
+        }
+    }
     u(cmd: Command) {}
     v(cmd: Command) {
         this.mode = this.mode === Mode.Visual ? Mode.Normal : Mode.Visual
         this.visual_cursor = this.cursor
     }
-    V(cmd: Command) {}
+    V(cmd: Command) {
+        this.mode = this.mode === Mode.Visual ? Mode.Normal : Mode.VisualLine
+        this.visual_cursor = this.cursor
+        const is_cursor_first = this.cursor < this.visual_cursor
+        this.visual_line_range = [
+            row_start(this.text, is_cursor_first ? this.cursor : this.visual_cursor, false),
+            row_end(this.text, is_cursor_first ? this.visual_cursor : this.cursor, false),
+        ]
+    }
     move({ type, count, options }: Command) {
         const motion_type = <MotionType>type
         const col = get_column(this.text, this.cursor)
@@ -321,6 +350,13 @@ class Vim {
             case Mode.Visual:
                 this.visual_cursor = new_pos
                 break
+            case Mode.VisualLine:
+                this.visual_cursor = new_pos
+                const is_cursor_first = this.cursor < this.visual_cursor
+                this.visual_line_range = [
+                    row_start(this.text, is_cursor_first ? this.cursor : this.visual_cursor, false),
+                    row_end(this.text, is_cursor_first ? this.visual_cursor : this.cursor, false),
+                ]
         }
     }
 
@@ -336,14 +372,22 @@ class Vim {
     sync_textarea() {
         if (!this.textarea) return
         this.textarea.value = this.text
-        if (this.mode === Mode.Visual) {
-            if (this.visual_cursor <= this.cursor) {
-                this.textarea.setSelectionRange(this.visual_cursor, this.cursor + 1)
-            } else {
-                this.textarea.setSelectionRange(this.cursor, this.visual_cursor + 1)
-            }
-        } else {
-            this.textarea.setSelectionRange(this.cursor, this.cursor)
+        switch (this.mode) {
+            case Mode.Normal:
+                this.textarea.setSelectionRange(this.cursor, this.cursor)
+                break
+            case Mode.Visual:
+                if (this.visual_cursor <= this.cursor) {
+                    this.textarea.setSelectionRange(this.visual_cursor, this.cursor + 1)
+                } else {
+                    this.textarea.setSelectionRange(this.cursor, this.visual_cursor + 1)
+                }
+                break
+            case Mode.VisualLine:
+                this.textarea.setSelectionRange(
+                    this.visual_line_range[0],
+                    this.visual_line_range[1] + 1
+                )
         }
     }
 

@@ -61,7 +61,7 @@ export const get_row = (text: string, pos: number): number => {
  *  returns the absolute position of the start of the row of the given position
  */
 export const row_start = (text: string, pos: number, include_newline: boolean): number => {
-    return pos === 0 ? 0 : text.lastIndexOf('\n', pos - 1) + (include_newline ? 0 : 1)
+    return pos <= 0 ? 0 : text.lastIndexOf('\n', pos - 1) + (include_newline ? 0 : 1)
 }
 
 // get the absolute position of the start of the nth row

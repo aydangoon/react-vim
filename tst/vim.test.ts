@@ -342,6 +342,18 @@ describe('visual mode', () => {
         expect(v.visual_cursor).toEqual(0)
         expect(v.cursor).toEqual(1)
     })
+    test('visual line', () => {
+        const v = make_vim('hi\nabc\n')
+        v.input('V')
+        expect(v.mode).toEqual(Mode.VisualLine)
+        expect(v.visual_line_range).toEqual([0, 1])
+        v.input('j')
+        expect(v.visual_line_range).toEqual([0, 5])
+        expect(v.mode).toEqual(Mode.VisualLine)
+        v.input('d')
+        expect(v.text).toEqual('\n')
+        expect(v.cursor).toEqual(0)
+    })
 })
 
 describe('insert mode', () => {

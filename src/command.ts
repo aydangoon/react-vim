@@ -80,7 +80,7 @@ export const parse_command = (s: string, mode: Mode = Mode.Normal): Command | nu
         case 'y':
         case 'c':
         case 'd':
-            if (mode === Mode.Visual) break
+            if (mode !== Mode.Normal) break
             options['motion'] = parse_command(s, mode)
             if (!options['motion']) return null
             break
