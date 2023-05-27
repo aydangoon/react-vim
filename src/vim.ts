@@ -260,13 +260,20 @@ class Vim {
     yy(cmd: Command) {}
     Y(cmd: Command) {}
     p(cmd: Command) {
+        // TODO: there's a weird case where a characterwise motion with text that ends in a newline
+        // places the cursor at the start of the paste instead of the end. explore this.
         const reg_type = cmd.options?.register || '"'
         const reg_value = this.registers.get(reg_type)
         if (!reg_value) return
         if (reg_value.linewise) {
             const end = row_end(this.text, this.cursor, true)
-            this.text = this.text.slice(0, end + 1) + reg_value.value + this.text.slice(end + 1)
-            this.cursor = end + 1
+            const insert_newline = this.text[end] !== '\n'
+            this.text =
+                this.text.slice(0, end + 1) +
+                (insert_newline ? '\n' : '') +
+                reg_value.value +
+                this.text.slice(end + 1)
+            this.cursor = end + 1 + (insert_newline ? 1 : 0)
         } else {
             this.text =
                 this.text.slice(0, this.cursor + 1) +

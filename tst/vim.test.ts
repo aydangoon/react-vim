@@ -331,6 +331,13 @@ describe('Vim non-motion commands', () => {
         expect(v.text).toEqual('adogbc')
         expect(v.cursor).toEqual(3)
     })
+    test('p linewise', () => {
+        const v = make_vim('abc')
+        v.registers.put_delete('dog\n', true)
+        v.input('p')
+        expect(v.text).toEqual('abc\ndog\n')
+        expect(v.cursor).toEqual(4)
+    })
 })
 
 const input_string = (v: Vim, s: string) => {
