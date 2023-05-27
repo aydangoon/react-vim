@@ -269,7 +269,9 @@ class Vim {
             this.cursor = end + 1
         } else {
             this.text =
-                this.text.slice(0, this.cursor) + reg_value.value + this.text.slice(this.cursor)
+                this.text.slice(0, this.cursor + 1) +
+                reg_value.value +
+                this.text.slice(this.cursor + 1)
             this.cursor += reg_value.value.length
         }
     }

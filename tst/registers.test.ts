@@ -1,5 +1,4 @@
 import Registers from '../src/registers'
-import Vim from '../src/vim'
 
 describe('registers', () => {
     test('put_yank', () => {
