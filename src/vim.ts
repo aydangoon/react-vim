@@ -14,6 +14,7 @@ import {
     row_end,
     row_start,
 } from './motion'
+import Registers from './registers'
 import { key_event_key_to_char, string_delete } from './utils'
 
 /**
@@ -32,6 +33,7 @@ class Vim {
     visual_line_range: [number, number] = [0, 0]
     cmd_buffer: string = '' // the command being built, e.g. 'd3w'.
     is_appending: boolean = false // was last command an append?
+    registers: Registers = new Registers()
 
     constructor(textarea: HTMLTextAreaElement, cmdline: HTMLInputElement)
     constructor(text: string)
@@ -252,10 +254,25 @@ class Vim {
         this.text = this.text.slice(0, next_nl) + ' ' + this.text.slice(next_nl + 1)
         this.cursor = next_nl
     }
-    y(cmd: Command) {}
+    y(cmd: Command) {
+        // TODO: implement. cursor identical to d, no delete, just store yanked text in register
+    }
     yy(cmd: Command) {}
     Y(cmd: Command) {}
-    p(cmd: Command) {}
+    p(cmd: Command) {
+        const reg_type = cmd.options?.register || '"'
+        const reg_value = this.registers.get(reg_type)
+        if (!reg_value) return
+        if (reg_value.linewise) {
+            const end = row_end(this.text, this.cursor, true)
+            this.text = this.text.slice(0, end + 1) + reg_value.value + this.text.slice(end + 1)
+            this.cursor = end + 1
+        } else {
+            this.text =
+                this.text.slice(0, this.cursor) + reg_value.value + this.text.slice(this.cursor)
+            this.cursor += reg_value.value.length
+        }
+    }
     P(cmd: Command) {}
     r(cmd: Command) {
         if (this.text.length === 0 || this.cursor === this.text.length) return
