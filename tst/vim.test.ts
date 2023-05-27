@@ -399,6 +399,18 @@ describe('Vim non-motion commands', () => {
         expect(v.text).toEqual('cat\ncat\ndog\ndog')
         expect(v.cursor).toEqual(4)
     })
+    test('Y', () => {
+        const v = make_vim('cat')
+        v.input('l')
+        v.input('Y')
+        expect(v.registers.get('"')).toEqual({ value: 'at', linewise: false })
+        expect(v.cursor).toEqual(1)
+        expect(v.mode).toEqual(Mode.Normal)
+        v.input('^')
+        v.input('p')
+        expect(v.text).toEqual('catat')
+        expect(v.cursor).toEqual(2)
+    })
 })
 
 const input_string = (v: Vim, s: string) => {
