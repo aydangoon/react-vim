@@ -7,7 +7,6 @@ import { Mode, Command, parse_command } from './command'
 import {
     MotionType,
     get_column,
-    get_row,
     is_exclusive,
     is_linewise,
     move as motion_move,
@@ -256,9 +255,50 @@ class Vim {
     }
     y(cmd: Command) {
         // TODO: implement. cursor identical to d, no delete, just store yanked text in register
+        let yank_text
+        let linewise
+        if (this.mode === Mode.VisualLine) {
+            yank_text = this.text.slice(this.visual_line_range[0], this.visual_line_range[1] + 1)
+            linewise = true
+            this.mode = Mode.Normal
+            this.cursor = this.visual_line_range[0]
+        } else if (this.mode === Mode.Visual) {
+            const cursor_first = this.cursor < this.visual_cursor
+            const start = cursor_first ? this.cursor : this.visual_cursor
+            const end = cursor_first ? this.visual_cursor : this.cursor
+            yank_text = this.text.slice(start, end + 1)
+            linewise = false
+            this.mode = Mode.Normal
+            this.cursor = start
+        } else {
+            const motion = cmd.options?.motion
+            if (!motion) throw new Error('y: requires motion in normal mode')
+            const new_pos = motion_move(motion, this.text, this.cursor, this.desired_col)
+            if (is_linewise(motion.type)) {
+                const start = row_start(
+                    this.text,
+                    this.cursor < new_pos ? this.cursor : new_pos,
+                    true
+                )
+                const end = row_end(this.text, this.cursor < new_pos ? new_pos : this.cursor, true)
+                yank_text = this.text.slice(start, end + 1)
+                this.cursor = start
+            } else {
+                yank_text = this.text.slice(
+                    this.cursor,
+                    new_pos - (is_exclusive(motion.type) ? 1 : 0) + 1
+                )
+                this.cursor = this.cursor < new_pos ? this.cursor : new_pos
+            }
+            linewise = is_linewise(motion.type)
+        }
+        // TODO: if a register is specified, put it there
+        this.registers.put_yank(yank_text, linewise)
     }
     yy(cmd: Command) {}
-    Y(cmd: Command) {}
+    Y(cmd: Command) {
+        this.y({ type: 'y', options: { motion: { type: '$' } } })
+    }
     p(cmd: Command) {
         // TODO: there's a weird case where a characterwise motion with text that ends in a newline
         // places the cursor at the start of the paste instead of the end. explore this.
@@ -267,13 +307,15 @@ class Vim {
         if (!reg_value) return
         if (reg_value.linewise) {
             const end = row_end(this.text, this.cursor, true)
-            const insert_newline = this.text[end] !== '\n'
+            const insert_nl_before = this.text[end] !== '\n'
+            const insert_nl_after = reg_value.value[reg_value.value.length - 1] !== '\n'
             this.text =
                 this.text.slice(0, end + 1) +
-                (insert_newline ? '\n' : '') +
+                (insert_nl_before ? '\n' : '') +
                 reg_value.value +
+                (insert_nl_after ? '\n' : '') +
                 this.text.slice(end + 1)
-            this.cursor = end + 1 + (insert_newline ? 1 : 0)
+            this.cursor = end + 1 + (insert_nl_before ? 1 : 0)
         } else {
             this.text =
                 this.text.slice(0, this.cursor + 1) +

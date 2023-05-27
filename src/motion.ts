@@ -61,7 +61,7 @@ export const get_row = (text: string, pos: number): number => {
  *  returns the absolute position of the start of the row of the given position
  */
 export const row_start = (text: string, pos: number, include_newline: boolean): number => {
-    return pos <= 0 ? 0 : text.lastIndexOf('\n', pos - 1) + (include_newline ? 0 : 1)
+    return pos <= 0 ? 0 : text.lastIndexOf('\n', pos - 1) + Number(!include_newline)
 }
 
 // get the absolute position of the start of the nth row
@@ -78,7 +78,7 @@ export const row_n_start = (text: string, n: number): number => {
 
 export const row_end = (text: string, pos: number, include_newline: boolean): number => {
     const next_newline = text.indexOf('\n', pos)
-    return next_newline === -1 ? text.length - 1 : next_newline - (include_newline ? 0 : 1)
+    return next_newline === -1 ? text.length - 1 : next_newline - Number(!include_newline)
 }
 
 export const next_blank = (text: string, pos: number): number => {
@@ -126,7 +126,7 @@ export const b = (text: string, pos: number): number => {
     const b_flipped = RGX_word.exec(flipped)
     if (!b_flipped) return 0
     const { index, 0: word } = b_flipped
-    return pos - index - word.length + (word === '\n' ? 1 : 0) // bc flipped, empty line needs +1
+    return pos - index - word.length + Number(word === '\n') // bc flipped, empty line needs +1
 }
 
 export const B = (text: string, pos: number): number => {
@@ -135,7 +135,7 @@ export const B = (text: string, pos: number): number => {
     const B_flipped = RGX_WORD.exec(flipped)
     if (!B_flipped) return 0
     const { index, 0: WORD } = B_flipped
-    return pos - index - WORD.length + (WORD === '\n' ? 1 : 0) // bc flipped, empty line needs +1
+    return pos - index - WORD.length + Number(WORD === '\n') // bc flipped, empty line needs +1
 }
 
 export const ge = (text: string, pos: number): number => {
@@ -217,7 +217,7 @@ export const $ = (text: string, pos: number, options: $Options = {}) => {
     const is_empty = pos === next_newline
     return next_newline === -1
         ? text.length - 1
-        : next_newline - (options.in_visual_mode || is_empty ? 0 : 1)
+        : next_newline - Number(!options.in_visual_mode && !is_empty)
 }
 
 export const g_ = (text: string, pos: number, count: number = 1) => {
