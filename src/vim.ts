@@ -236,7 +236,7 @@ class Vim {
         }
     }
     dd(cmd: Command) {
-        const start_exclusive = this.cursor === 0 ? -1 : this.text.indexOf('\n', this.cursor - 1)
+        const start_exclusive = row_start(this.text, this.cursor, false) - 1
         let next_nl = this.text.indexOf('\n', this.cursor)
         const end_excusive = next_nl === -1 ? this.text.length : next_nl + 1
         this.text = this.text.slice(0, start_exclusive + 1) + this.text.slice(end_excusive)
@@ -303,7 +303,7 @@ class Vim {
         this.registers.put_yank(yank_text, linewise)
     }
     yy(cmd: Command) {
-        const start_exclusive = this.cursor === 0 ? -1 : this.text.indexOf('\n', this.cursor - 1)
+        const start_exclusive = row_start(this.text, this.cursor, false) - 1
         let next_nl = this.text.indexOf('\n', this.cursor)
         const end_excusive = next_nl === -1 ? this.text.length : next_nl + 1
         this.registers.put_yank(this.text.slice(start_exclusive + 1, end_excusive), true)
