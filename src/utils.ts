@@ -28,3 +28,5 @@ export const string_delete = (s: string, i: number, j: number): string => {
 export const string_insert = (s: string, to_add: string, start: number): string => {
     return s.slice(0, start) + to_add + s.slice(start)
 }
+
+export const last_char = (s: string) => s.charAt(s.length - 1)

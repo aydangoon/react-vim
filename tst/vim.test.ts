@@ -411,13 +411,18 @@ describe('Vim non-motion commands', () => {
         expect(v.text).toEqual('catat')
         expect(v.cursor).toEqual(2)
     })
+    test('yy', () => {
+        const v = make_vim('cat')
+        v.input('l')
+        v.input('yy')
+        expect(v.registers.get('"')).toEqual({ value: 'cat', linewise: true })
+        expect(v.cursor).toEqual(1)
+        expect(v.mode).toEqual(Mode.Normal)
+        v.input('p')
+        expect(v.text).toEqual('cat\ncat')
+        expect(v.cursor).toEqual(4)
+    })
 })
-
-const input_string = (v: Vim, s: string) => {
-    for (const c of s) {
-        v.input(c)
-    }
-}
 
 describe('visual mode', () => {
     test('basic', () => {
@@ -465,7 +470,7 @@ describe('insert mode', () => {
         v.input('Backspace')
         expect(v.text).toEqual('world')
         expect(v.cursor).toEqual(0)
-        input_string(v, 'hello ')
+        v.input_string('hello ')
         expect(v.text).toEqual('hello world')
         expect(v.cursor).toEqual(6)
         expect(v.mode).toEqual(Mode.Insert)

@@ -7,6 +7,7 @@ import { Mode, Command, parse_command } from './command'
 import {
     MotionType,
     get_column,
+    in_last_row,
     is_exclusive,
     is_linewise,
     move as motion_move,
@@ -14,7 +15,7 @@ import {
     row_start,
 } from './motion'
 import Registers from './registers'
-import { key_event_key_to_char, string_delete } from './utils'
+import { key_event_key_to_char, last_char, string_delete, string_insert } from './utils'
 
 /**
  * The Vim state. Constructed with a textarea and input elements or a string. If constructed with
@@ -43,6 +44,12 @@ class Vim {
             this.cmdline = args[1]
         } else {
             this.text = args[0]
+        }
+    }
+
+    input_string(s: string) {
+        for (const c of s) {
+            this.input(c)
         }
     }
 
@@ -295,7 +302,12 @@ class Vim {
         // TODO: if a register is specified, put it there
         this.registers.put_yank(yank_text, linewise)
     }
-    yy(cmd: Command) {}
+    yy(cmd: Command) {
+        const start_exclusive = this.cursor === 0 ? -1 : this.text.indexOf('\n', this.cursor - 1)
+        let next_nl = this.text.indexOf('\n', this.cursor)
+        const end_excusive = next_nl === -1 ? this.text.length : next_nl + 1
+        this.registers.put_yank(this.text.slice(start_exclusive + 1, end_excusive), true)
+    }
     Y(cmd: Command) {
         this.y({ type: 'y', options: { motion: { type: '$' } } })
     }
@@ -308,19 +320,14 @@ class Vim {
         if (reg_value.linewise) {
             const end = row_end(this.text, this.cursor, true)
             const insert_nl_before = this.text[end] !== '\n'
-            const insert_nl_after = reg_value.value[reg_value.value.length - 1] !== '\n'
-            this.text =
-                this.text.slice(0, end + 1) +
-                (insert_nl_before ? '\n' : '') +
-                reg_value.value +
-                (insert_nl_after ? '\n' : '') +
-                this.text.slice(end + 1)
+            const insert_nl_after =
+                last_char(reg_value.value) !== '\n' && !in_last_row(this.text, this.cursor)
+            const to_insert =
+                (insert_nl_before ? '\n' : '') + reg_value.value + (insert_nl_after ? '\n' : '')
+            this.text = string_insert(this.text, to_insert, end + 1)
             this.cursor = end + 1 + (insert_nl_before ? 1 : 0)
         } else {
-            this.text =
-                this.text.slice(0, this.cursor + 1) +
-                reg_value.value +
-                this.text.slice(this.cursor + 1)
+            this.text = string_insert(this.text, reg_value.value, this.cursor + 1)
             this.cursor += reg_value.value.length
         }
     }
@@ -330,16 +337,12 @@ class Vim {
         if (!reg_value) return
         if (reg_value.linewise) {
             const start = row_start(this.text, this.cursor, true)
-            const insert_newline = reg_value.value[reg_value.value.length - 1] !== '\n'
-            this.text =
-                this.text.slice(0, start + Number(start !== 0)) +
-                reg_value.value +
-                (insert_newline ? '\n' : '') +
-                this.text.slice(start + Number(start !== 0))
+            const insert_newline = last_char(reg_value.value) !== '\n'
+            const to_insert = reg_value.value + (insert_newline ? '\n' : '')
+            this.text = string_insert(this.text, to_insert, start + Number(start !== 0))
             this.cursor = start + Number(start !== 0)
         } else {
-            this.text =
-                this.text.slice(0, this.cursor) + reg_value.value + this.text.slice(this.cursor)
+            this.text = string_insert(this.text, reg_value.value, this.cursor)
             this.cursor += reg_value.value.length - 1
         }
     }

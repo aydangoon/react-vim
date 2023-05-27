@@ -76,6 +76,10 @@ export const row_n_start = (text: string, n: number): number => {
     return i
 }
 
+export const in_last_row = (text: string, pos: number): boolean => {
+    return text.indexOf('\n', pos) === -1
+}
+
 export const row_end = (text: string, pos: number, include_newline: boolean): number => {
     const next_newline = text.indexOf('\n', pos)
     return next_newline === -1 ? text.length - 1 : next_newline - Number(!include_newline)
