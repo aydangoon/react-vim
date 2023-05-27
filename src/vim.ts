@@ -296,7 +296,9 @@ class Vim {
                 this.text.slice(start + Number(start !== 0))
             this.cursor = start + Number(start !== 0)
         } else {
-            // TODO
+            this.text =
+                this.text.slice(0, this.cursor) + reg_value.value + this.text.slice(this.cursor)
+            this.cursor += reg_value.value.length - 1
         }
     }
     r(cmd: Command) {
