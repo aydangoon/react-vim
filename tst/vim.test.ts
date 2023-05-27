@@ -312,6 +312,18 @@ describe('Vim non-motion commands', () => {
         expect(v.text).toEqual('h_i\n')
         expect(v.cursor).toEqual(2)
     })
+    test('~', () => {
+        const v = make_vim('abc')
+        v.input('~')
+        expect(v.text).toEqual('Abc')
+        v.input('V')
+        v.input('~')
+        expect(v.text).toEqual('aBC')
+        v.input('v')
+        v.input('l')
+        v.input('~')
+        expect(v.text).toEqual('AbC')
+    })
 })
 
 const input_string = (v: Vim, s: string) => {

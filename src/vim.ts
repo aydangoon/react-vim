@@ -310,12 +310,19 @@ class Vim {
         this.C(cmd)
     }
     tilde(cmd: Command) {
-        // TODO: implement
         if (this.mode === Mode.Normal) {
             const c = this.text[this.cursor]
             const new_c = c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()
             this.text = this.text.slice(0, this.cursor) + new_c + this.text.slice(this.cursor + 1)
         } else {
+            const start = this.mode === Mode.Visual ? this.cursor : this.visual_line_range[0]
+            const end = this.mode === Mode.Visual ? this.visual_cursor : this.visual_line_range[1]
+            const new_chars = this.text
+                .slice(start, end + 1)
+                .split('')
+                .map((c) => (c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()))
+                .join('')
+            this.text = this.text.slice(0, start) + new_chars + this.text.slice(end + 1)
         }
     }
     u(cmd: Command) {}
