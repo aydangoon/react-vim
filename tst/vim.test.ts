@@ -338,6 +338,18 @@ describe('Vim non-motion commands', () => {
         expect(v.text).toEqual('abc\ndog\n')
         expect(v.cursor).toEqual(4)
     })
+    test('P linewise', () => {
+        let v = make_vim('abc')
+        v.registers.put_delete('dog\n', true)
+        v.input('P')
+        expect(v.text).toEqual('dog\nabc')
+        expect(v.cursor).toEqual(0)
+        v = make_vim('abc\n')
+        v.registers.put_delete('dog\n', true)
+        v.input('P')
+        expect(v.text).toEqual('dog\nabc\n')
+        expect(v.cursor).toEqual(0)
+    })
 })
 
 const input_string = (v: Vim, s: string) => {

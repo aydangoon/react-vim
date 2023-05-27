@@ -282,7 +282,23 @@ class Vim {
             this.cursor += reg_value.value.length
         }
     }
-    P(cmd: Command) {}
+    P(cmd: Command) {
+        const reg_type = cmd.options?.register || '"'
+        const reg_value = this.registers.get(reg_type)
+        if (!reg_value) return
+        if (reg_value.linewise) {
+            const start = row_start(this.text, this.cursor, true)
+            const insert_newline = reg_value.value[reg_value.value.length - 1] !== '\n'
+            this.text =
+                this.text.slice(0, start + Number(start !== 0)) +
+                reg_value.value +
+                (insert_newline ? '\n' : '') +
+                this.text.slice(start + Number(start !== 0))
+            this.cursor = start + Number(start !== 0)
+        } else {
+            // TODO
+        }
+    }
     r(cmd: Command) {
         if (this.text.length === 0 || this.cursor === this.text.length) return
         if (this.text[this.cursor] === '\n') return
