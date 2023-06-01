@@ -15,6 +15,7 @@ import {
     row_start,
 } from './motion'
 import Registers from './registers'
+import _History from './history'
 import { key_event_key_to_char, last_char, string_delete, string_insert } from './utils'
 
 /**
@@ -34,6 +35,7 @@ class Vim {
     cmd_buffer: string = '' // the command being built, e.g. 'd3w'.
     is_appending: boolean = false // was last command an append?
     registers: Registers = new Registers()
+    history: _History = new _History()
 
     constructor(textarea: HTMLTextAreaElement, cmdline: HTMLInputElement)
     constructor(text: string)
@@ -138,6 +140,7 @@ class Vim {
                 case 'C':  this.C(cmd); break
                 case '~':  this.tilde(cmd); break
                 case 'u':  this.u(cmd); break
+                //case 'f':  this.ctrlC(cmd); break
                 case 'v':  this.v(cmd); break
                 case 'V':  this.V(cmd); break
                 default:   this.move(cmd); break
@@ -246,13 +249,36 @@ class Vim {
         this.d({ type: 'd', options: { motion: { type: '$' } } })
     }
     x(cmd: Command) {
+        const char = this.text.charAt(this.cursor)
+        const before_cursor = this.cursor
         this.text = this.text.slice(0, this.cursor) + this.text.slice(this.cursor + 1)
         if (this.cursor !== 0 && this.text[this.cursor] === '\n') this.cursor--
+        this.history
+            .add_change({
+                before_cursor,
+                after_cursor: this.cursor,
+                text_pos: before_cursor,
+                text: char,
+                is_adding: false,
+            })
+            .commit()
     }
     X(cmd: Command) {
         if (this.cursor === 0) return
+        const before_cursor = this.cursor
         this.cursor--
-        this.x(cmd)
+        const char = this.text.charAt(this.cursor)
+        this.text = this.text.slice(0, this.cursor) + this.text.slice(this.cursor + 1)
+        if (this.cursor !== 0 && this.text[this.cursor] === '\n') this.cursor--
+        this.history
+            .add_change({
+                before_cursor,
+                after_cursor: this.cursor,
+                text_pos: before_cursor,
+                text: char,
+                is_adding: false,
+            })
+            .commit()
     }
     J(cmd: Command) {
         let next_nl = this.text.indexOf('\n', this.cursor)
@@ -261,7 +287,6 @@ class Vim {
         this.cursor = next_nl
     }
     y(cmd: Command) {
-        // TODO: implement. cursor identical to d, no delete, just store yanked text in register
         let yank_text
         let linewise
         if (this.mode === Mode.VisualLine) {
@@ -414,7 +439,22 @@ class Vim {
             this.text = this.text.slice(0, start) + new_chars + this.text.slice(end + 1)
         }
     }
-    u(cmd: Command) {}
+    u(cmd: Command) {
+        /* Logic for undoing:
+            - for each change store:
+                - cursor position before change
+                - was it an append?
+                - did it add or remove text?
+                - the text that was added or removed 
+            - when undoing, go through the history of actions and undo them in reverse order
+            - **an action is list of changes**
+                - i.e. text: hi, input: cwabc<Esc> -> [{cursor: 0, added: false, text: 'hi'}, {cursor: 0, added: true, text: 'abc'}]
+                - text: a, input: ahi<Esc> -> [{cursor: 0, added: true, append: true, text: 'hi'}]
+        */
+        const { text, cursor } = this.history.undo(this.text)
+        this.text = text
+        this.cursor = cursor
+    }
     v(cmd: Command) {
         this.mode = this.mode === Mode.Visual ? Mode.Normal : Mode.Visual
         this.visual_cursor = this.cursor

@@ -433,6 +433,17 @@ describe('Vim non-motion commands', () => {
     })
 })
 
+describe('Vim history', () => {
+    test('x', () => {
+        const v = make_vim('cat')
+        v.input('x')
+        expect(v.text).toEqual('at')
+        v.input('u')
+        expect(v.text).toEqual('cat')
+        v.input('f')
+    })
+})
+
 describe('visual mode', () => {
     test('basic', () => {
         const v = make_vim('abc def')
